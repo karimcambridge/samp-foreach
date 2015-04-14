@@ -214,9 +214,15 @@ Iterators:
 
 #define _Y_ITER_C0:%0[%1]@YSII_%4g%3) %0@YSII_%4g[%1]%3)
 #define _Y_ITER_C1:_Y_ITER_C2:%0[%1]@YSII_Ag%3) %0@YSII_Ag[]%3)
-#define _Y_ITER_C2:sizeof%0(%1)@YSII_Ag-1;_:(%2=_Y_ITER_ARRAY:%3(%4)@YSII_Ag[%5])!=_Y_ITER_ARRAY_SIZE(%6);) -1;_:(%2=%3@YSII_Ag(%4,%5))!=-1;)
+#define _Y_ITER_C2:sizeof%0(%1)@YSII_Ag-1;_:(%2=_Y_ITER_ARRAY:%3(%4)@YSII_Ag[%5])!=%9_Y_ITER_ARRAY_SIZE(%6);) -1;_:(%2=%3@YSII_Ag(%4,%5))!=-1;)
+ 
+#define _Y_ITER_C3:%0[%1]@YSII_Cg,%2[%3]@YSII_Ag[%4]={%5} _Y_ITER_C3:%0@YSII_Cg[%4-1],%0@YSII_Ag[%1][%4]
 
-#define _Y_ITER_C3:%0[%1]@YSII_Cg,%2[%3]@YSII_Ag[%4]={%5} _Y_ITER_C3:%0@YSII_Cg[%1],%0@YSII_Ag[%1][%4]
+// foreach 14 C2 and C3
+
+//#define _Y_ITER_C2:sizeof%0(%1)@YSII_Ag-1;_:(%2=_Y_ITER_ARRAY:%3(%4)@YSII_Ag[%5])!=_Y_ITER_ARRAY_SIZE(%6);) -1;_:(%2=%3@YSII_Ag(%4,%5))!=-1;)
+
+//#define _Y_ITER_C3:%0[%1]@YSII_Cg,%2[%3]@YSII_Ag[%4]={%5} _Y_ITER_C3:%0@YSII_Cg[%1],%0@YSII_Ag[%1][%4]
 
 #if !defined BOTSYNC_IS_BOT
 	static stock
@@ -629,6 +635,63 @@ Notes:
 		{
 			YSI_g_sCallbacks |= 2;
 		}
+		#if defined _FOREACH_BOT && !defined FOREACH_NO_BOTS
+            Bot@YSII_Cg = _Y_ITER_C3:0;
+            Character@YSII_Cg = _Y_ITER_C3:0;
+            new
+                lastBot = MAX_PLAYERS,
+                lastCharacter = MAX_PLAYERS;
+        #endif
+        Player@YSII_Cg = _Y_ITER_C3:0;
+        new
+            lastPlayer = MAX_PLAYERS;
+        for (new i = 0; i != MAX_PLAYERS; ++i)
+        {
+            if (IsPlayerConnected(i))
+            {
+                #if defined _FOREACH_BOT
+                    // Had to do "if ! else" due to compile options.
+                    if (!IsPlayerNPC(i))
+                    {
+                        Player@YSII_Ag[lastPlayer] = i;
+                        ++Player@YSII_Cg;
+                        lastPlayer = i;
+                    }
+                    #if !defined FOREACH_NO_BOTS
+                        else
+                        {
+                            Bot@YSII_Ag[lastBot] = i;
+                            ++Bot@YSII_Cg;
+                            lastBot = i;
+                        }
+                        #pragma tabsize 4
+                        Character@YSII_Ag[lastCharacter] = i;
+                        ++Character@YSII_Cg;
+                        lastCharacter = i;
+                    #endif
+                #else
+                    Player@YSII_Ag[lastPlayer] = i;
+                    ++Player@YSII_Cg;
+                    lastPlayer = i;
+                #endif
+            }
+            else
+            {
+                #if defined _FOREACH_BOT && !defined FOREACH_NO_BOTS
+                    Bot@YSII_Ag[i] = MAX_PLAYERS + 1;
+                    //Bot@YSII_Rg[i] = -1;
+                    Character@YSII_Ag[i] = MAX_PLAYERS + 1;
+                    //Character@YSII_Rg[i] = -1;
+                #endif
+                Player@YSII_Ag[i] = MAX_PLAYERS + 1;
+                //Player@YSII_Rg[i] = -1;
+            }
+        }
+        #if defined _FOREACH_BOT && !defined FOREACH_NO_BOTS
+            Bot@YSII_Ag[lastPlayer] = MAX_PLAYERS;
+            Character@YSII_Ag[lastPlayer] = MAX_PLAYERS;
+        #endif
+        Player@YSII_Ag[lastPlayer] = MAX_PLAYERS;
 		CallLocalFunction("Iter_OnFilterScriptInit", YSI_gsSpecifier@);
 		return 1;
 	}
@@ -1105,19 +1168,14 @@ stock
 {
 	if (0 <= slot <= size && array[slot] <= size)
 	{
-		new
-			last = size;
-		//for (new next = array[size]; next != size; next = array[next])
-		for ( ; ; )
-		{
-			new
-				next = array[last];
-			if (next == slot)
-			{
-				return last;
-			}
-			last = next;
-		}
+		for (new last = slot; last--; )
+        {
+            if (array[last] == slot)
+            {
+                return last;
+            }
+ 
+        }
 	}
 	return size;
 }
@@ -1199,3 +1257,31 @@ Notes:
 \*----------------------------------------------------------------------------*/
 
 #define Iter_Prev(%1,%2) Iter_PrevInternal(_Y_ITER_ARRAY:%1@YSII_Ag,_Y_ITER_ARRAY_SIZE(%1),(%2))
+
+/*----------------------------------------------------------------------------*\
+Function:
+    Iter_InternalArray
+Params:
+    iter - Name of the iterator to get the true name of.
+Return:
+    -
+Notes:
+    Accesses the internal array of an iterator.
+\*----------------------------------------------------------------------------*/
+
+#define Iter_InternalArray(%1) (_Y_ITER_ARRAY:%1@YSII_Ag)
+
+/*----------------------------------------------------------------------------*\
+Function:
+    Iter_InternalSize
+Params:
+    iter - Name of the iterator to get the true size of.
+Return:
+    -
+Notes:
+    Accesses the internal size of an iterator.
+\*----------------------------------------------------------------------------*/
+
+#define _Y_ITER_INT_SIZE:%0(%2[%1]@YSII_Ag)) %0(%2@YSII_Ag[]))
+
+#define Iter_InternalSize(%1) (_:_Y_ITER_INT_SIZE:sizeof (%1@YSII_Ag))
