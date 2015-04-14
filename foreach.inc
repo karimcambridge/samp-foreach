@@ -30,7 +30,7 @@ Legal:
 	the Initial Developer. All Rights Reserved.
 	
 	Contributors:
-		ZeeX, koolk, JoeBullet/Google63, g_aSlice/Slice
+		ZeeX, koolk, JoeBullet/Google63, g_aSlice/Slice, Kar
 	
 	Thanks:
 		JoeBullet/Google63 - Handy arbitrary ASM jump code using SCTRL.
@@ -53,8 +53,10 @@ Legal:
 		SA:MP Team past, present and future - SA:MP.
 	
 Version:
-	0.4.1
+	19
 Changelog:
+	14/05/15:
+		Cleaned up the entire include.
 	16/07/12:
 		Fixed a bug with "loadfs" blocking callbacks.
 		Slightly reduced the memory consumption of constant strings.
@@ -84,7 +86,7 @@ Changelog:
 	06/08/10:
 		Added special array declaration format.
 	18/12/09:
-		Added Itter_Func2 functions for multi-dimensional iterators.
+		Added Iter_Func2 functions for multi-dimensional iterators.
 		Renamed foreact et al as keywords in the documentation.
 		Changed licensing from GPL to MPL.
 	02/09/09:
@@ -114,33 +116,33 @@ Functions:
 	Core:
 		-
 	Stock:
-		Itter_ShowArray - Displays the contents of the array.
-		Itter_AddInternal - Add a value to an itterator.
-		Itter_RemoveInternal - Remove a value from an itterator.
-		Itter_RandomInternal - Get a random item from an itterator.
-		Itter_FreeInternal - Gets the first free slot in the itterator.
-		Itter_InitInternal - Initialises a multi-dimensional itterator.
-		Itter_ContainsInternal - Checks if a value is in an iterator.
+		Iter_ShowArray - Displays the contents of the array. // Disabled
+		Iter_AddInternal - Add a value to an iterator.
+		Iter_RemoveInternal - Remove a value from an iterator.
+		Iter_RandomInternal - Get a random item from an iterator.
+		Iter_FreeInternal - Gets the first free slot in the iterator.
+		Iter_InitInternal - Initialises a multi-dimensional iterator.
+		Iter_ContainsInternal - Checks if a value is in an iterator.
 	Static:
 		-
 	Inline:
-		Itter_Create - Create a new itterator value set.
-		Itter_Add - Wraps Itter_AddInternal.
-		Itter_SafeRemove - Wraps Itter_SafeRemoveInternal.
-		Itter_Remove - Wraps Itter_RemoveInternal.
-		Itter_Random - Wraps Itter_RandomInternal.
-		Itter_Count - Gets the number of items in an itterator.
-		Itter_Debug - Wraps around Itter_ShowArray.
-		Itter_Free - Wraps around Itter_FreeInternal.
-		Itter_Contains - Wraps around Itter_ContainsInternal.
+		Iter_Create - Create a new iterator value set.
+		Iter_Add - Wraps Iter_AddInternal.
+		Iter_SafeRemove - Wraps Iter_SafeRemoveInternal.
+		Iter_Remove - Wraps Iter_RemoveInternal.
+		Iter_Random - Wraps Iter_RandomInternal.
+		Iter_Count - Gets the number of items in an iterator.
+		Iter_Debug - Wraps around Iter_ShowArray. // Disabled
+		Iter_Free - Wraps around Iter_FreeInternal.
+		Iter_Contains - Wraps around Iter_ContainsInternal.
 	API:
 		-
 Callbacks:
 	-
 Hooks:
-	Itter_OnPlayerConnect - Hook for the OnPlayerConnect callback.
-	Itter_OnPlayerDisconnect - Hook for the OnPlayerDisconnect callback.
-	Itter_OnGameModeInit - Only exists to make the code compile correctly...
+	Iter_OnPlayerConnect - Hook for the OnPlayerConnect callback.
+	Iter_OnPlayerDisconnect - Hook for the OnPlayerDisconnect callback.
+	Iter_OnGameModeInit - Only exists to make the code compile correctly...
 Definitions:
 	-
 Enums:
@@ -148,24 +150,21 @@ Enums:
 Macros:
 	-
 Keywords:
-	foreach - Command to loop an iterator.
+	foreach - Function to loop an iterator.
 	foreachex - Like foreach but without a new variable.
-	foreach2 - Command to loop through an iterator array.
-	foreachex - Like foreach2 but without a new variable.
 Tags:
 	Iterator - Declare an iterator.
 Variables:
 	Global:
 		-
 	Static:
-		YSI_g_OPC - Records wether Itter_OnPlayerConnect exists for speed.
-		YSI_g_OPDC - Records wether Itter_OnPlayerDisconnect exists for speed.
+		YSI_g_OPC - Records whether Iter_OnPlayerConnect exists for speed.
+		YSI_g_OPDC - Records whether Iter_OnPlayerDisconnect exists for speed.
 Commands:
 	-
 Compile options:
-	YSI_ITTER_NO_SORT - Removed.
 	FOREACH_NO_BOTS - Remove the bot iterators for smaller code.
-	FOREACH_NO_PLAYERS - Remove all default code for player itteration.
+	FOREACH_NO_PLAYERS - Remove all default code for player iteration.
 Operators:
 	-
 Iterators:
@@ -175,7 +174,7 @@ Iterators:
 	Character - All players and bots.
 \*----------------------------------------------------------------------------*/
 
-#define _FOREACH_LOCAL_VERSION        17
+#define _FOREACH_LOCAL_VERSION        19
 
 // Foreach is testing us.
 #if defined _FOREACH_INC_TEST
@@ -202,19 +201,12 @@ Iterators:
 	#error "Please include a_samp or a_npc before foreach"
 #endif
 
-//#include <YSI\y_debug>
-//#include <YSI\y_hooks>
-
 #if defined SendChat || defined FOREACH_NO_PLAYERS
 	#define BOTSYNC_IS_BOT     (true)
 #endif
 
 #if defined IsPlayerNPC
 	#define _FOREACH_BOT
-#endif
-
-#if defined YSI_ITTER_NO_SORT
-	#error YSI_ITTER_NO_SORT is no longer supported by foreach.
 #endif
 
 #define _Y_ITER_ARRAY: _:_Y_ITER_C0:
@@ -232,29 +224,35 @@ Iterators:
 #endif
 
 #if !defined BOTSYNC_IS_BOT
-	forward Itter_OPDCInternal(playerid);
+	forward Iter_OPDCInternal(playerid);
 #endif
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_Create2
+	Iter_Create2 (unused)
 Params:
-	name - Itterator identifier.
+	name - Iterator identifier.
 	size0 - Number of iterators.
 	size1 - Number of items per iterator.
 Return:
 	-
 Notes:
-	Creates a new array of itterator start/array pair.
+	Creates a new array of iterator start/array pair.
 \*----------------------------------------------------------------------------*/
 
 // If this ever changes, update the size reference in y_users.
-/*#define Iter_Create2 Itter_Create2
-#define Itter_Create2(%1,%2,%3) \
+/*#define Iter_Create2(%1,%2,%3) \
 	new \
 		%1@YSII_Sg[%2] = {-1, ...}, \
 		%1@YSII_Cg[%2] = {0}, \
 		%1@YSII_Ag[%2][%3]*/
+
+/*----------------------------------------------------------------------------*\
+Array:
+	IteratorArray
+Notes:
+	Creates a new iterator array start/array pair.
+\*----------------------------------------------------------------------------*/
 
 #define IteratorArray:%1[%2]<%3> %1@YSII_Cg[%2],%1@YSII_Ag[%2][%3+1]//,%1@YSII_Rg[%2][%3+1]
 
@@ -262,45 +260,44 @@ Notes:
 Array:
 	Iterator
 Notes:
-	Creates a new itterator start/array pair.
+	Creates a new iterator start/array pair.
 \*----------------------------------------------------------------------------*/
 
 #define Iterator:%1<%2> _Y_ITER_C3:%1@YSII_Cg,%1@YSII_Ag[(%2)+1]={(%2)*2,(%2)*2-1,...}
-#define iterator%0<%1> Iterator:%0<%1>
+#define iterator%0<%1> new Iterator:%0<%1>
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_Init2
+	Iter_Init
 Params:
-	itter - Name of the itterator array to initialise.
+	iter - Name of the iterator array to initialise.
 Return:
 	-
 Notes:
-	Wrapper for Itter_InitInternal.
+	Wrapper for Iter_InitInternal.
 
 native Iter_Init(IteratorArray:Name[]<>);
 
 \*----------------------------------------------------------------------------*/
 
-#define Iter_Init Itter_Init
-#define Itter_Init(%1) \
-	Itter_InitInternal(%1@YSII_Ag,sizeof %1@YSII_Ag,sizeof %1@YSII_Ag[]-1)
+#define Iter_Init(%1) \
+	Iter_InitInternal(%1@YSII_Ag,sizeof %1@YSII_Ag,sizeof %1@YSII_Ag[]-1)
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_Create
+	Iter_Create
 Params:
-	name - Itterator identifier.
+	name - Iterator identifier.
 	size - Number of values.
 Return:
 	-
 Notes:
-	Creates a new itterator start/array pair.
+	Creates a new iterator start/array pair.
 \*----------------------------------------------------------------------------*/
 
 // If this ever changes, update the size reference in y_users.
-/*#define Iter_Create Itter_Create
-#define Itter_Create(%1,%2) \
+/*
+#define Iter_Create(%1,%2) \
 	new \
 		%1@YSII_Sg = -1, \
 		%1@YSII_Cg = 0, \
@@ -308,66 +305,63 @@ Notes:
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_Add
+	Iter_Add
 Params:
-	itter - Name of the itterator to add the data to.
-	value - Value to add to the itterator.
+	iter - Name of the iterator to add the data to.
+	value - Value to add to the iterator.
 Return:
 	-
 Notes:
-	Wrapper for Itter_AddInternal.
+	Wrapper for Iter_AddInternal.
 
 native Iter_Add(Iterator:Name<>, value);
 
 \*----------------------------------------------------------------------------*/
 
-#define Iter_Add Itter_Add
-#define Itter_Add(%1,%2) Itter_AddInternal(_Y_ITER_ARRAY:%1@YSII_Cg,_Y_ITER_ARRAY:%1@YSII_Ag,%2,_Y_ITER_ARRAY_SIZE(%1))
+#define Iter_Add(%1,%2) Iter_AddInternal(_Y_ITER_ARRAY:%1@YSII_Cg,_Y_ITER_ARRAY:%1@YSII_Ag,%2,_Y_ITER_ARRAY_SIZE(%1))
 
-/*#define Iter_AddSafe Itter_AddSafe
-#define Itter_AddSafe(%1,%2) \
-	Itter_AddSafeInternal(%1@YSII_Sg, %1@YSII_Cg, %1@YSII_Ag, %1@YSII_Rg, %2)*/
+/*
+#define Iter_AddSafe(%1,%2) \
+	Iter_AddSafeInternal(%1@YSII_Sg, %1@YSII_Cg, %1@YSII_Ag, %1@YSII_Rg, %2)*/
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_Free
+	Iter_Free
 Params:
-	itter - Name of the itterator to get the first free slot in.
+	iter - Name of the iterator to get the first free slot in.
 Return:
 	-
 Notes:
-	Wrapper for Itter_FreeInternal.
+	Wrapper for Iter_FreeInternal.
 
 native Iter_Free(Iterator:Name<>);
 
 \*----------------------------------------------------------------------------*/
 
-#define Iter_Free Itter_Free
-#define Itter_Free(%1) Itter_FreeInternal(_Y_ITER_ARRAY:%1@YSII_Ag,_Y_ITER_ARRAY_SIZE(%1))
+#define Iter_Free(%1) Iter_FreeInternal(_Y_ITER_ARRAY:%1@YSII_Ag,_Y_ITER_ARRAY_SIZE(%1))
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_Remove
+	Iter_Remove
 Params:
-	itter - Name of the itterator to remove data from.
+	iter - Name of the iterator to remove data from.
 	value - Data to remove.
 Return:
 	-
 Notes:
-	Wrapper for Itter_RemoveInternal.
+	Wrapper for Iter_RemoveInternal.
 
 native Iter_Remove(Iterator:Name<>, value);
 
 \*----------------------------------------------------------------------------*/
 
-#define Iter_Remove Itter_Remove
-#define Itter_Remove(%1,%2) Itter_RemoveInternal(_Y_ITER_ARRAY:%1@YSII_Cg,_Y_ITER_ARRAY:%1@YSII_Ag,%2,_Y_ITER_ARRAY_SIZE(%1))
+#define Iter_Remove(%1,%2) Iter_RemoveInternal(_Y_ITER_ARRAY:%1@YSII_Cg,_Y_ITER_ARRAY:%1@YSII_Ag,%2,_Y_ITER_ARRAY_SIZE(%1))
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_Contains
+	Iter_Contains
 Params:
-	itter - Name of the itterator to check membership of.
+	iter - Name of the iterator to check membership of.
 	value - Value to check.
 Return:
 	-
@@ -378,20 +372,19 @@ native Iter_Remove(Iterator:Name<>, value);
 
 \*----------------------------------------------------------------------------*/
 
-#define Iter_Contains Itter_Contains
-#define Itter_Contains(%1,%2) Itter_ContainsInternal(_Y_ITER_ARRAY:%1@YSII_Ag,%2,_Y_ITER_ARRAY_SIZE(%1))
+#define Iter_Contains(%1,%2) Iter_ContainsInternal(_Y_ITER_ARRAY:%1@YSII_Ag,%2,_Y_ITER_ARRAY_SIZE(%1))
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_SafeRemove
+	Iter_SafeRemove
 Params:
-	itter - Name of the itterator to remove data from.
+	iter - Name of the iterator to remove data from.
 	value - Data to remove.
 	next - Container for the pointer to the next element.
 Return:
 	-
 Notes:
-	Wrapper for Itter_SafeRemoveInternal.  Common use:
+	Wrapper for Iter_SafeRemoveInternal.  Common use:
 	
 	Iter_SafeRemove(iter, i, i);
 
@@ -399,76 +392,71 @@ native Iter_SafeRemove(Iterator:Name<>, value, &next);
 
 \*----------------------------------------------------------------------------*/
 
-#define Iter_SafeRemove Itter_SafeRemove
-#define Itter_SafeRemove(%1,%2,%3) Itter_SafeRemoveInternal(_Y_ITER_ARRAY:%1@YSII_Cg,_Y_ITER_ARRAY:%1@YSII_Ag,%2,%3,_Y_ITER_ARRAY_SIZE(%1))
+#define Iter_SafeRemove(%1,%2,%3) Iter_SafeRemoveInternal(_Y_ITER_ARRAY:%1@YSII_Cg,_Y_ITER_ARRAY:%1@YSII_Ag,%2,%3,_Y_ITER_ARRAY_SIZE(%1))
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_Random
+	Iter_Random
 Params:
-	itter - Name of the itterator to get a random slot from.
+	iter - Name of the iterator to get a random slot from.
 Return:
 	-
 Notes:
-	Wrapper for Itter_RandomInternal.
+	Wrapper for Iter_RandomInternal.
 
 native Iter_Random(Iterator:Name<>);
 
 \*----------------------------------------------------------------------------*/
 
-#define Iter_Random Itter_Random
-#define Itter_Random(%1) Itter_RandomInternal(_Y_ITER_ARRAY:%1@YSII_Cg,_Y_ITER_ARRAY:%1@YSII_Ag,_Y_ITER_ARRAY_SIZE(%1))
+#define Iter_Random(%1) Iter_RandomInternal(_Y_ITER_ARRAY:%1@YSII_Cg,_Y_ITER_ARRAY:%1@YSII_Ag,_Y_ITER_ARRAY_SIZE(%1))
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_Debug
+	Iter_Debug
 Params:
-	itter - Name of the itterator to output debug information from.
+	iter - Name of the iterator to output debug information from.
 Return:
 	-
 Notes:
-	Wrapper for Itter_ShowArray.
+	Wrapper for Iter_ShowArray.
 \*----------------------------------------------------------------------------*/
 
-//#define Iter_Debug Itter_Debug
-//#define Itter_Debug(%1) Itter_ShowArray(_Y_ITER_ARRAY:%1@YSII_Cg,_Y_ITER_ARRAY:%1@YSII_Ag)
+//#define Iter_Debug(%1) Iter_ShowArray(_Y_ITER_ARRAY:%1@YSII_Cg,_Y_ITER_ARRAY:%1@YSII_Ag)
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_Count
+	Iter_Count
 Params:
-	itter - Name of the itterator to get a random slot from4.
+	iter - Name of the iterator to get a random slot from4.
 Return:
 	-
 Notes:
-	Returns the number of items in this itterator.
+	Returns the number of items in this iterator.
 
 native Iter_Count(Iterator:Name<>);
 
 \*----------------------------------------------------------------------------*/
 
-#define Iter_Count Itter_Count
-#define Itter_Count(%1) (_Y_ITER_ARRAY:%1@YSII_Cg)
+#define Iter_Count(%1) (_Y_ITER_ARRAY:%1@YSII_Cg)
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_Clear
+	Iter_Clear
 Params:
-	itter - Name of the itterator empty.
+	iter - Name of the iterator empty.
 Return:
 	-
 Notes:
-	Wrapper for Itter_ClearInternal.
+	Wrapper for Iter_ClearInternal.
 
 native Iter_Clear(IteratorArray:Name[]<>);
 
 \*----------------------------------------------------------------------------*/
 
-#define Iter_Clear Itter_Clear
-#define Itter_Clear(%1) Itter_ClearInternal(_Y_ITER_ARRAY:%1@YSII_Cg,_Y_ITER_ARRAY:%1@YSII_Ag,_Y_ITER_ARRAY_SIZE(%1))
+#define Iter_Clear(%1) Iter_ClearInternal(_Y_ITER_ARRAY:%1@YSII_Cg,_Y_ITER_ARRAY:%1@YSII_Ag,_Y_ITER_ARRAY_SIZE(%1))
 
 /*----------------------------------------------------------------------------*\
-Create the internal itterators.
+Create the internal iterators.
 \*----------------------------------------------------------------------------*/
 
 #if !defined BOTSYNC_IS_BOT
@@ -480,11 +468,8 @@ Create the internal itterators.
 			Iterator:Bot<MAX_PLAYERS>,
 			Iterator:Character<MAX_PLAYERS>;
 		
-		//#define NPC@YSII_Sg Bot@YSII_Sg
 		#define NPC@YSII_Cg Bot@YSII_Cg
 		#define NPC@YSII_Ag Bot@YSII_Ag
-		//#define NPC@YSII_Eg Bot@YSII_Eg
-		//#define NPC@YSII_Rg Bot@YSII_Rg
 	#endif
 #endif
 
@@ -495,9 +480,9 @@ Create the internal itterators.
 \*----------------------------------------------------------------------------*/
 
 static stock
-	YSI_gsOnPlayerConnect[] = "Itter_OnPlayerConnect",
-	YSI_gsOnPlayerDisconnect[] = "Itter_OnPlayerDisconnect",
-	YSI_gsOnGameModeInit[] = "Itter_OnGameModeInit",
+	YSI_gsOnPlayerConnect[] = "Iter_OnPlayerConnect",
+	YSI_gsOnPlayerDisconnect[] = "Iter_OnPlayerDisconnect",
+	YSI_gsOnGameModeInit[] = "Iter_OnGameModeInit",
 	YSI_gsSpecifier@[] = "",
 	YSI_gsSpecifier@i[] = "i";
 
@@ -505,12 +490,12 @@ static stock
 Function:
 	foreach
 Params:
-	data - Data to itterate through.
+	data - Data to iterate through.
 	as - Variable to set value to.
 Return:
 	-
 Notes:
-	Not exactly the same as PHP foreach, just itterates through a list and
+	Not exactly the same as PHP foreach, just iterates through a list and
 	returns the value of the current slot but uses that slot as the next index
 	too.  Variables must be in the form @YSII_<gname>S for the start index and
 	@YSII_<gname>A for the data array where <name> is what's entered in data.
@@ -557,12 +542,12 @@ Notes:
 Function:
 	foreachex
 Params:
-	data - Data to itterate through.
+	data - Data to iterate through.
 	as - Variable to set value to.
 Return:
 	-
 Notes:
-	Similar to foreach but doesn't declare a new variable for the itterator.
+	Similar to foreach but does not declare a new variable for the iterator.
 \*----------------------------------------------------------------------------*/
 
 #define foreachex(%1,%2) foreach(%2:%1)
@@ -570,7 +555,7 @@ Notes:
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_OnPlayerConnect
+	Iter_OnPlayerConnect
 Params:
 	playerid - Player who joined.
 Return:
@@ -582,7 +567,7 @@ Notes:
 	were being treated as the same variable (namely @YSII_EgotS and
 	@YSII_CgharacterS were the same and @YSII_EgotC and @YSII_CgharacterC were the
 	same).  Adding print statements which reference these variables seem to fix
-	the problem, and I've tried to make sure that the values will never actually
+	the problem, and I have tried to make sure that the values will never actually
 	get printed.
 \*----------------------------------------------------------------------------*/
 
@@ -592,18 +577,18 @@ Notes:
 		#if defined _FOREACH_BOT
 			if (!IsPlayerNPC(playerid))
 			{
-				Itter_Add(Player, playerid);
+				Iter_Add(Player, playerid);
 			}
 			#if !defined FOREACH_NO_BOTS
 				else
 				{
-					Itter_Add(Bot, playerid);
+					Iter_Add(Bot, playerid);
 				}
 				#pragma tabsize 4
-				Itter_Add(Character, playerid);
+				Iter_Add(Character, playerid);
 			#endif
 		#else
-			Itter_Add(Player, playerid);
+			Iter_Add(Player, playerid);
 		#endif
 		if (YSI_g_sCallbacks & 2)
 		{
@@ -617,13 +602,13 @@ Notes:
 	#else
 		#define _ALS_OnPlayerConnect
 	#endif
-	#define OnPlayerConnect Itter_OnPlayerConnect
+	#define OnPlayerConnect Iter_OnPlayerConnect
 	forward OnPlayerConnect(playerid);
 #endif
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_OnFilterScriptInit
+	Iter_OnFilterScriptInit
 Params:
 	-
 Return:
@@ -644,7 +629,7 @@ Notes:
 		{
 			YSI_g_sCallbacks |= 2;
 		}
-		CallLocalFunction("Itter_OnFilterScriptInit", YSI_gsSpecifier@);
+		CallLocalFunction("Iter_OnFilterScriptInit", YSI_gsSpecifier@);
 		return 1;
 	}
 	
@@ -653,13 +638,13 @@ Notes:
 	#else
 		#define _ALS_OnFilterScriptInit
 	#endif
-	#define OnFilterScriptInit Itter_OnFilterScriptInit
+	#define OnFilterScriptInit Iter_OnFilterScriptInit
 	forward OnFilterScriptInit();
 #endif
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_OnGameModeInit
+	Iter_OnGameModeInit
 Params:
 	-
 Return:
@@ -762,13 +747,13 @@ Notes:
 	#else
 		#define _ALS_OnGameModeInit
 	#endif
-	#define OnGameModeInit Itter_OnGameModeInit
+	#define OnGameModeInit Iter_OnGameModeInit
 	forward OnGameModeInit();
 #endif
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_OnPlayerDisconnect
+	Iter_OnPlayerDisconnect
 Params:
 	playerid - Player who left.
 Return:
@@ -786,7 +771,7 @@ Notes:
 		{
 			CallLocalFunction(YSI_gsOnPlayerDisconnect, "ii", playerid, reason);
 		}
-		SetTimerEx("Itter_OPDCInternal", 0, false, YSI_gsSpecifier@i, playerid);
+		SetTimerEx("Iter_OPDCInternal", 0, false, YSI_gsSpecifier@i, playerid);
 		return 1;
 	}
 	
@@ -795,24 +780,24 @@ Notes:
 	#else
 		#define _ALS_OnPlayerDisconnect
 	#endif
-	#define OnPlayerDisconnect Itter_OnPlayerDisconnect
+	#define OnPlayerDisconnect Iter_OnPlayerDisconnect
 	forward OnPlayerDisconnect(playerid, reason);
 #endif
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_OPDCInternal
+	Iter_OPDCInternal
 Params:
 	playerid - Player who left.
 Return:
 	-
 Notes:
 	Called AFTER "OnPlayerDisconnect" so that using "Kick" inside a "foreach"
-	loop doesn't crash the server due to an OOB error.
+	loop does not crash the server due to an OOB error.
 \*----------------------------------------------------------------------------*/
 
 #if !defined BOTSYNC_IS_BOT
-	public Itter_OPDCInternal(playerid)
+	public Iter_OPDCInternal(playerid)
 	{
 		if (IsPlayerConnected(playerid))
 		{
@@ -821,38 +806,38 @@ Notes:
 		#if defined _FOREACH_BOT
 			if (!IsPlayerNPC(playerid))
 			{
-				Itter_Remove(Player, playerid);
+				Iter_Remove(Player, playerid);
 			}
 			#if !defined FOREACH_NO_BOTS
 				else
 				{
-					Itter_Remove(Bot, playerid);
+					Iter_Remove(Bot, playerid);
 				}
 				#pragma tabsize 4
-				Itter_Remove(Character, playerid);
+				Iter_Remove(Character, playerid);
 			#endif
 		#else
-			Itter_Remove(Player, playerid);
+			Iter_Remove(Player, playerid);
 		#endif
 	}
 #endif
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_ShowArray
+	Iter_ShowArray
 Params:
-	start - Itterator start point.
-	members[] - Itterator contents.
-	size - Number of itterator values
+	start - Iterator start point.
+	members[] - Iterator contents.
+	size - Number of iterator values
 Return:
 	-
 Notes:
-	Pure debug function.  Has regular prints not debug prints
-	as it's only called when debug is on.
+	Pure debug function. Has regular prints not debug prints
+	as it is only called when debug is on.
 \*----------------------------------------------------------------------------*/
 
 /*stock
-	Itter_ShowArray(size, members[])
+	Iter_ShowArray(size, members[])
 {
 	static
 		sString[61];
@@ -876,10 +861,10 @@ Notes:
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_RandomInternal
+	Iter_RandomInternal
 Params:
-	count - Number of items in the itterator.
-	array[] - Itterator data.
+	count - Number of items in the iterator.
+	array[] - Iterator data.
 	size - Size of the iterator.
 Return:
 	-
@@ -888,7 +873,7 @@ Notes:
 \*----------------------------------------------------------------------------*/
 
 stock
-	Itter_RandomInternal(count, array[], size)
+	Iter_RandomInternal(count, array[], size)
 {
 	if (count == 0)
 	{
@@ -910,23 +895,23 @@ stock
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_FreeInternal
+	Iter_FreeInternal
 Params:
-	count - Number of items in the itterator.
-	array[] - Itterator data.
-	size - Size of the itterator.
+	count - Number of items in the iterator.
+	array[] - Iterator data.
+	size - Size of the iterator.
 Return:
 	-
 Notes:
-	Finds the first free slot in the itterator.  Itterators now HAVE to be
+	Finds the first free slot in the iterator.  Iterators now HAVE to be
 	sorted for this function to work correctly as it uses that fact to decide
 	wether a slot is unused or the last one.  If you want to use the slot
-	straight after finding it the itterator will need to re-find it to add in
+	straight after finding it the iterator will need to re-find it to add in
 	the data.
 \*----------------------------------------------------------------------------*/
 
 stock
-	Itter_FreeInternal(array[], size)
+	Iter_FreeInternal(array[], size)
 {
 	for (new i = 0; i != size; ++i)
 	{
@@ -940,22 +925,22 @@ stock
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_AddInternal
+	Iter_AddInternal
 Params:
 	&start - Array start index.
-	&count - Number of items in the itterator.
-	array[] - Itterator data.
+	&count - Number of items in the iterator.
+	array[] - Iterator data.
 	value - Item to add.
 Return:
 	-
 Notes:
-	Adds a value to a given itterator set.  Now detects when you try and add the
+	Adds a value to a given iterator set.  Now detects when you try and add the
 	last item multiple times, as well as all the other items.  Now simplified even
 	further with the new internal representation.
 \*----------------------------------------------------------------------------*/
 
 stock
-	Itter_AddInternal(&count, array[], value, size)
+	Iter_AddInternal(&count, array[], value, size)
 {
 	if (0 <= value < size && array[value] > size)
 	{
@@ -977,30 +962,30 @@ stock
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_RemoveInternal
+	Iter_RemoveInternal
 Params:
-	&count - Number of items in the itterator.
-	array[] - Itterator data.
+	&count - Number of items in the iterator.
+	array[] - Iterator data.
 	value - Item to remove.
 Return:
 	-
 Notes:
-	Removes a value from an itterator.
+	Removes a value from an iterator.
 \*----------------------------------------------------------------------------*/
 
 stock
-	Itter_RemoveInternal(&count, array[], value, size)
+	Iter_RemoveInternal(&count, array[], value, size)
 {
 	new
 		last;
-	return Itter_SafeRemoveInternal(count, array, value, last, size);
+	return Iter_SafeRemoveInternal(count, array, value, last, size);
 }
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_SafeRemoveInternal
+	Iter_SafeRemoveInternal
 Params:
-	&count - Number of items in the itterator.
+	&count - Number of items in the iterator.
 	array[] - Iterator data.
 	back[] - Reverse iterator data.
 	value - Item to remove.
@@ -1008,11 +993,11 @@ Params:
 Return:
 	-
 Notes:
-	Removes a value from an itterator safely.
+	Removes a value from an iterator safely.
 \*----------------------------------------------------------------------------*/
 
 stock
-	Itter_SafeRemoveInternal(&count, array[], value, &last, size)
+	Iter_SafeRemoveInternal(&count, array[], value, &last, size)
 {
 	if (0 <= value < size && array[value] <= size)
 	{
@@ -1034,9 +1019,9 @@ stock
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_ContainsInternal
+	Iter_ContainsInternal
 Params:
-	array[] - Itterator data.
+	array[] - Iterator data.
 	value - Item to check.
 	size - Size of the iterator.
 Return:
@@ -1046,17 +1031,17 @@ Notes:
 \*----------------------------------------------------------------------------*/
 
 stock
-	Itter_ContainsInternal(array[], value, size)
+	Iter_ContainsInternal(array[], value, size)
 {
 	return 0 <= value < size && array[value] <= size;
 }
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_ClearInternal
+	Iter_ClearInternal
 Params:
-	&count - Number of items in the itterator.
-	array[] - Itterator data.
+	&count - Number of items in the iterator.
+	array[] - Iterator data.
 	size - Size of the iterator.
 Return:
 	-
@@ -1065,7 +1050,7 @@ Notes:
 \*----------------------------------------------------------------------------*/
 
 stock
-	Itter_ClearInternal(&count, array[], size)
+	Iter_ClearInternal(&count, array[], size)
 {
 	for (new i = 0, t = size + 1; i < size; ++i)
 	{
@@ -1077,20 +1062,20 @@ stock
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_InitInternal
+	Iter_InitInternal
 Params:
-	array[][] - Itterator array to initialise.
+	array[][] - Iterator array to initialise.
 	s0 - Size of first dimension.
 	s1 - Size of second dimension.
 Return:
 	-
 Notes:
-	Multi-dimensional arrays can't be initialised at compile time, so need to be
+	Multi-dimensional arrays can not be initialised at compile time, so need to be
 	done at run time, which is slightly annoying.
 \*----------------------------------------------------------------------------*/
 
 stock
-	Itter_InitInternal(arr[][], s0, s1)
+	Iter_InitInternal(arr[][], s0, s1)
 {
 	for (new i = 0, t = s1 + 1; i < s0; ++i)
 	{
@@ -1104,9 +1089,9 @@ stock
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Itter_PrevInternal
+	Iter_PrevInternal
 Params:
-	array[] - Itterator data.
+	array[] - Iterator data.
 	size - Size of the iterator.
 	slot - The current slot.
 Return:
@@ -1116,7 +1101,7 @@ Notes:
 \*----------------------------------------------------------------------------*/
 
 stock
-	Itter_PrevInternal(array[], size, slot)
+	Iter_PrevInternal(array[], size, slot)
 {
 	if (0 <= slot <= size && array[slot] <= size)
 	{
@@ -1149,7 +1134,6 @@ Notes:
 \*----------------------------------------------------------------------------*/
 
 #define Iter_Begin(%1) (_Y_ITER_ARRAY_SIZE(%1))
-#define Itter_Begin(%1) (_Y_ITER_ARRAY_SIZE(%1))
 
 /*----------------------------------------------------------------------------*\
 Function:
@@ -1163,7 +1147,6 @@ Notes:
 \*----------------------------------------------------------------------------*/
 
 #define Iter_End(%1) (_Y_ITER_ARRAY_SIZE(%1))
-#define Itter_End(%1) (_Y_ITER_ARRAY_SIZE(%1))
 
 /*----------------------------------------------------------------------------*\
 Function:
@@ -1177,7 +1160,6 @@ Notes:
 \*----------------------------------------------------------------------------*/
 
 #define Iter_First(%1) (_Y_ITER_ARRAY:%1@YSII_Ag[_Y_ITER_ARRAY_SIZE(%1)])
-#define Itter_First(%1) (_Y_ITER_ARRAY:%1@YSII_Ag[_Y_ITER_ARRAY_SIZE(%1)])
 
 /*----------------------------------------------------------------------------*\
 Function:
@@ -1190,8 +1172,7 @@ Notes:
 	Gets the last element in an iterator.
 \*----------------------------------------------------------------------------*/
 
-#define Iter_Last(%1) Itter_PrevInternal(_Y_ITER_ARRAY:%1@YSII_Ag,_Y_ITER_ARRAY_SIZE(%1),_Y_ITER_ARRAY_SIZE(%1))
-#define Itter_Last(%1) Itter_PrevInternal(_Y_ITER_ARRAY:%1@YSII_Ag,_Y_ITER_ARRAY_SIZE(%1),_Y_ITER_ARRAY_SIZE(%1))
+#define Iter_Last(%1) Iter_PrevInternal(_Y_ITER_ARRAY:%1@YSII_Ag,_Y_ITER_ARRAY_SIZE(%1),_Y_ITER_ARRAY_SIZE(%1))
 
 /*----------------------------------------------------------------------------*\
 Function:
@@ -1205,7 +1186,6 @@ Notes:
 \*----------------------------------------------------------------------------*/
 
 #define Iter_Next(%1,%2) (_Y_ITER_ARRAY:%1@YSII_Ag[(%2)])
-#define Itter_Next(%1,%2) (_Y_ITER_ARRAY:%1@YSII_Ag[(%2)])
 
 /*----------------------------------------------------------------------------*\
 Function:
@@ -1218,5 +1198,4 @@ Notes:
 	Gets the element in an iterator before the current one.  Slow.
 \*----------------------------------------------------------------------------*/
 
-#define Iter_Prev(%1,%2) Itter_PrevInternal(_Y_ITER_ARRAY:%1@YSII_Ag,_Y_ITER_ARRAY_SIZE(%1),(%2))
-#define Itter_Prev(%1,%2) Itter_PrevInternal(_Y_ITER_ARRAY:%1@YSII_Ag,_Y_ITER_ARRAY_SIZE(%1),(%2))
+#define Iter_Prev(%1,%2) Iter_PrevInternal(_Y_ITER_ARRAY:%1@YSII_Ag,_Y_ITER_ARRAY_SIZE(%1),(%2))
