@@ -174,7 +174,7 @@ Iterators:
 	Character - All players and bots.
 \*----------------------------------------------------------------------------*/
 
-#define _FOREACH_LOCAL_VERSION        19
+#define _FOREACH_LOCAL_VERSION		19
 
 // Foreach is testing us.
 #if defined _FOREACH_INC_TEST
@@ -202,7 +202,7 @@ Iterators:
 #endif
 
 #if defined SendChat || defined FOREACH_NO_PLAYERS
-	#define BOTSYNC_IS_BOT     (true)
+	#define BOTSYNC_IS_BOT		(true)
 #endif
 
 #if defined IsPlayerNPC
@@ -636,62 +636,62 @@ Notes:
 			YSI_g_sCallbacks |= 2;
 		}
 		#if defined _FOREACH_BOT && !defined FOREACH_NO_BOTS
-            Bot@YSII_Cg = _Y_ITER_C3:0;
-            Character@YSII_Cg = _Y_ITER_C3:0;
-            new
-                lastBot = MAX_PLAYERS,
-                lastCharacter = MAX_PLAYERS;
-        #endif
-        Player@YSII_Cg = _Y_ITER_C3:0;
-        new
-            lastPlayer = MAX_PLAYERS;
-        for (new i = 0; i != MAX_PLAYERS; ++i)
-        {
-            if (IsPlayerConnected(i))
-            {
-                #if defined _FOREACH_BOT
-                    // Had to do "if ! else" due to compile options.
-                    if (!IsPlayerNPC(i))
-                    {
-                        Player@YSII_Ag[lastPlayer] = i;
-                        ++Player@YSII_Cg;
-                        lastPlayer = i;
-                    }
-                    #if !defined FOREACH_NO_BOTS
-                        else
-                        {
-                            Bot@YSII_Ag[lastBot] = i;
-                            ++Bot@YSII_Cg;
-                            lastBot = i;
-                        }
-                        #pragma tabsize 4
-                        Character@YSII_Ag[lastCharacter] = i;
-                        ++Character@YSII_Cg;
-                        lastCharacter = i;
-                    #endif
-                #else
-                    Player@YSII_Ag[lastPlayer] = i;
-                    ++Player@YSII_Cg;
-                    lastPlayer = i;
-                #endif
-            }
-            else
-            {
-                #if defined _FOREACH_BOT && !defined FOREACH_NO_BOTS
-                    Bot@YSII_Ag[i] = MAX_PLAYERS + 1;
-                    //Bot@YSII_Rg[i] = -1;
-                    Character@YSII_Ag[i] = MAX_PLAYERS + 1;
-                    //Character@YSII_Rg[i] = -1;
-                #endif
-                Player@YSII_Ag[i] = MAX_PLAYERS + 1;
-                //Player@YSII_Rg[i] = -1;
-            }
-        }
-        #if defined _FOREACH_BOT && !defined FOREACH_NO_BOTS
-            Bot@YSII_Ag[lastPlayer] = MAX_PLAYERS;
-            Character@YSII_Ag[lastPlayer] = MAX_PLAYERS;
-        #endif
-        Player@YSII_Ag[lastPlayer] = MAX_PLAYERS;
+			Bot@YSII_Cg = _Y_ITER_C3:0;
+			Character@YSII_Cg = _Y_ITER_C3:0;
+			new
+				lastBot = MAX_PLAYERS,
+				lastCharacter = MAX_PLAYERS;
+		#endif
+		Player@YSII_Cg = _Y_ITER_C3:0;
+		new
+			lastPlayer = MAX_PLAYERS;
+		for (new i = 0; i != MAX_PLAYERS; ++i)
+		{
+			if (IsPlayerConnected(i))
+			{
+				#if defined _FOREACH_BOT
+					// Had to do "if ! else" due to compile options.
+					if (!IsPlayerNPC(i))
+					{
+						Player@YSII_Ag[lastPlayer] = i;
+						++Player@YSII_Cg;
+						lastPlayer = i;
+					}
+					#if !defined FOREACH_NO_BOTS
+						else
+						{
+							Bot@YSII_Ag[lastBot] = i;
+							++Bot@YSII_Cg;
+							lastBot = i;
+						}
+						#pragma tabsize 4
+						Character@YSII_Ag[lastCharacter] = i;
+						++Character@YSII_Cg;
+						lastCharacter = i;
+					#endif
+				#else
+					Player@YSII_Ag[lastPlayer] = i;
+					++Player@YSII_Cg;
+					lastPlayer = i;
+				#endif
+			}
+			else
+			{
+				#if defined _FOREACH_BOT && !defined FOREACH_NO_BOTS
+					Bot@YSII_Ag[i] = MAX_PLAYERS + 1;
+					//Bot@YSII_Rg[i] = -1;
+					Character@YSII_Ag[i] = MAX_PLAYERS + 1;
+					//Character@YSII_Rg[i] = -1;
+				#endif
+				Player@YSII_Ag[i] = MAX_PLAYERS + 1;
+				//Player@YSII_Rg[i] = -1;
+			}
+		}
+		#if defined _FOREACH_BOT && !defined FOREACH_NO_BOTS
+			Bot@YSII_Ag[lastPlayer] = MAX_PLAYERS;
+			Character@YSII_Ag[lastPlayer] = MAX_PLAYERS;
+		#endif
+		Player@YSII_Ag[lastPlayer] = MAX_PLAYERS;
 		CallLocalFunction("Iter_OnFilterScriptInit", YSI_gsSpecifier@);
 		return 1;
 	}
@@ -1169,13 +1169,12 @@ stock
 	if (0 <= slot <= size && array[slot] <= size)
 	{
 		for (new last = slot; last--; )
-        {
-            if (array[last] == slot)
-            {
-                return last;
-            }
- 
-        }
+ 		{
+ 			if (array[last] == slot)
+ 			{
+ 			    return last;
+ 			}
+ 		}
 	}
 	return size;
 }
