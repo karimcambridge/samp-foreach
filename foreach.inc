@@ -714,7 +714,7 @@ Return:
 	-
 Notes:
 	There are WIERD bugs in this script, seemingly caused by the compiler, so
-	this hopefully fixes them.  The OnFilterScriptInit code is written to be
+	this hopefully fixes them.  The OnGameModeInit code is written to be
 	very fast by utilising the internal array structure instead of the regular
 	Add functions.
 \*----------------------------------------------------------------------------*/
