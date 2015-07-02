@@ -433,7 +433,7 @@ Notes:
 Function:
 	Iter_Count
 Params:
-	iter - Name of the iterator to get a random slot from4.
+	iter - Name of the iterator to get the number of items from.
 Return:
 	-
 Notes:
