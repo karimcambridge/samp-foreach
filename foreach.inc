@@ -53,7 +53,7 @@ Legal:
 		SA:MP Team past, present and future - SA:MP.
 	
 Version:
-	19
+	19 (0.4.2)
 Changelog:
 	14/05/15:
 		Cleaned up the entire include.
@@ -132,7 +132,6 @@ Functions:
 		Iter_Remove - Wraps Iter_RemoveInternal.
 		Iter_Random - Wraps Iter_RandomInternal.
 		Iter_Count - Gets the number of items in an iterator.
-		Iter_Debug - Wraps around Iter_ShowArray. // Disabled
 		Iter_Free - Wraps around Iter_FreeInternal.
 		Iter_Contains - Wraps around Iter_ContainsInternal.
 	API:
@@ -208,6 +207,8 @@ Iterators:
 #if defined IsPlayerNPC
 	#define _FOREACH_BOT
 #endif
+
+#define ITER_NONE -1
 
 #define _Y_ITER_ARRAY: _:_Y_ITER_C0:
 #define _Y_ITER_ARRAY_SIZE(%1) _:_Y_ITER_C1:_Y_ITER_C2:sizeof %1@YSII_Ag-1
@@ -336,7 +337,7 @@ Function:
 Params:
 	iter - Name of the iterator to get the first free slot in.
 Return:
-	-for
+	-
 Notes:
 	Wrapper for Iter_FreeInternal.
 
@@ -415,19 +416,6 @@ native Iter_Random(Iterator:Name<>);
 \*----------------------------------------------------------------------------*/
 
 #define Iter_Random(%1) Iter_RandomInternal(_Y_ITER_ARRAY:%1@YSII_Cg,_Y_ITER_ARRAY:%1@YSII_Ag,_Y_ITER_ARRAY_SIZE(%1))
-
-/*----------------------------------------------------------------------------*\
-Function:
-	Iter_Debug
-Params:
-	iter - Name of the iterator to output debug information from.
-Return:
-	-
-Notes:
-	Wrapper for Iter_ShowArray.
-\*----------------------------------------------------------------------------*/
-
-//#define Iter_Debug(%1) Iter_ShowArray(_Y_ITER_ARRAY:%1@YSII_Cg,_Y_ITER_ARRAY:%1@YSII_Ag)
 
 /*----------------------------------------------------------------------------*\
 Function:
@@ -887,43 +875,6 @@ Notes:
 
 /*----------------------------------------------------------------------------*\
 Function:
-	Iter_ShowArray
-Params:
-	start - Iterator start point.
-	members[] - Iterator contents.
-	size - Number of iterator values
-Return:
-	-
-Notes:
-	Pure debug function. Has regular prints not debug prints
-	as it is only called when debug is on.
-\*----------------------------------------------------------------------------*/
-
-/*stock
-	Iter_ShowArray(size, members[])
-{
-	static
-		sString[61];
-	new
-		i,
-		j = 10;
-	printf("Start: %d", start);
-	printf("Size:  %d", size);
-	while (i < size)
-	{
-		sString[0] = '\0';
-		while (i < j && i < size)
-		{
-			format(sString, sizeof (sString), "%s, %d", sString, members[i]);
-			i++;
-		}
-		printf("Array (%d): %s", j, sString);
-		j += 10;
-	}
-}*/
-
-/*----------------------------------------------------------------------------*\
-Function:
 	Iter_RandomInternal
 Params:
 	count - Number of items in the iterator.
@@ -935,12 +886,11 @@ Notes:
 	Returns a random value from an iterator.
 \*----------------------------------------------------------------------------*/
 
-stock
-	Iter_RandomInternal(count, array[], size)
+stock Iter_RandomInternal(count, array[], size)
 {
 	if (count == 0)
 	{
-		return -1;
+		return ITER_NONE;
 	}
 	new
 		rnd = random(count),
@@ -953,7 +903,7 @@ stock
 		}
 		cur = array[cur];
 	}
-	return -1;
+	return ITER_NONE;
 }
 
 /*----------------------------------------------------------------------------*\
@@ -966,15 +916,14 @@ Params:
 Return:
 	-
 Notes:
-	Finds the first free slot in the iterator.  Iterators now HAVE to be
+	Finds the first free slot in the iterator. Iterators now HAVE to be
 	sorted for this function to work correctly as it uses that fact to decide
-	wether a slot is unused or the last one.  If you want to use the slot
+	whether a slot is unused or the last one. If you want to use the slot
 	straight after finding it the iterator will need to re-find it to add in
 	the data.
 \*----------------------------------------------------------------------------*/
 
-stock
-	Iter_FreeInternal(array[], size)
+stock Iter_FreeInternal(array[], size)
 {
 	for (new i = 0; i != size; ++i)
 	{
@@ -983,7 +932,7 @@ stock
 			return i;
 		}
 	}
-	return -1;
+	return ITER_NONE;
 }
 
 /*----------------------------------------------------------------------------*\
@@ -1002,8 +951,7 @@ Notes:
 	further with the new internal representation.
 \*----------------------------------------------------------------------------*/
 
-stock
-	Iter_AddInternal(&count, array[], value, size)
+stock Iter_AddInternal(&count, array[], value, size)
 {
 	if (0 <= value < size && array[value] > size)
 	{
@@ -1036,8 +984,7 @@ Notes:
 	Removes a value from an iterator.
 \*----------------------------------------------------------------------------*/
 
-stock
-	Iter_RemoveInternal(&count, array[], value, size)
+stock Iter_RemoveInternal(&count, array[], value, size)
 {
 	new
 		last;
@@ -1059,8 +1006,7 @@ Notes:
 	Removes a value from an iterator safely.
 \*----------------------------------------------------------------------------*/
 
-stock
-	Iter_SafeRemoveInternal(&count, array[], value, &last, size)
+stock Iter_SafeRemoveInternal(&count, array[], value, &last, size)
 {
 	if (0 <= value < size && array[value] <= size)
 	{
@@ -1093,8 +1039,7 @@ Notes:
 	Checks if this item is in the iterator.
 \*----------------------------------------------------------------------------*/
 
-stock
-	Iter_ContainsInternal(array[], value, size)
+stock Iter_ContainsInternal(array[], value, size)
 {
 	return 0 <= value < size && array[value] <= size;
 }
@@ -1112,12 +1057,11 @@ Notes:
 	Resets an iterator.
 \*----------------------------------------------------------------------------*/
 
-stock
-	Iter_ClearInternal(&count, array[], size)
+stock Iter_ClearInternal(&count, array[], size)
 {
-	for (new i = 0, t = size + 1; i < size; ++i)
+	for (new i = 0; i != size; ++i)
 	{
-		array[i] = t;
+		array[i] = ITER_NONE;
 	}
 	array[size] = size;
 	count = 0;
@@ -1137,16 +1081,15 @@ Notes:
 	done at run time, which is slightly annoying.
 \*----------------------------------------------------------------------------*/
 
-stock
-	Iter_InitInternal(arr[][], s0, s1)
+stock Iter_InitInternal(arr[][], s0, s1)
 {
-	for (new i = 0, t = s1 + 1; i < s0; ++i)
+	for (new i = 0; i != s0; ++i)
 	{
 		for (new j = 0; j < s1; ++j)
 		{
-			arr[i][j] = t;
+			arr[i][j] = ITER_NONE;
 		}
-		arr[i][s1] = s1;
+		arr[i][s1] = ITER_NONE;
 	}
 }
 
@@ -1191,6 +1134,7 @@ Notes:
 \*----------------------------------------------------------------------------*/
 
 #define Iter_Begin(%1) (_Y_ITER_ARRAY_SIZE(%1))
+#define Iter_Start Iter_Begin
 
 /*----------------------------------------------------------------------------*\
 Function:
@@ -1204,6 +1148,7 @@ Notes:
 \*----------------------------------------------------------------------------*/
 
 #define Iter_End(%1) (_Y_ITER_ARRAY_SIZE(%1))
+#define Iter_Finish Iter_End
 
 /*----------------------------------------------------------------------------*\
 Function:
@@ -1256,6 +1201,7 @@ Notes:
 \*----------------------------------------------------------------------------*/
 
 #define Iter_Prev(%1,%2) Iter_PrevInternal(_Y_ITER_ARRAY:%1@YSII_Ag,_Y_ITER_ARRAY_SIZE(%1),(%2))
+#define Iter_Previous Iter_Prev
 
 /*----------------------------------------------------------------------------*\
 Function:
