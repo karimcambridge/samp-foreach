@@ -116,7 +116,6 @@ Functions:
 	Core:
 		-
 	Stock:
-		Iter_ShowArray - Displays the contents of the array. // Disabled
 		Iter_AddInternal - Add a value to an iterator.
 		Iter_RemoveInternal - Remove a value from an iterator.
 		Iter_RandomInternal - Get a random item from an iterator.
@@ -326,10 +325,6 @@ native Iter_Add(Iterator:Name<>, value);
 \*----------------------------------------------------------------------------*/
 
 #define Iter_Add(%1,%2) Iter_AddInternal(_Y_ITER_ARRAY:%1@YSII_Cg,_Y_ITER_ARRAY:%1@YSII_Ag,%2,_Y_ITER_ARRAY_SIZE(%1))
-
-/*
-#define Iter_AddSafe(%1,%2) \
-	Iter_AddSafeInternal(%1@YSII_Sg, %1@YSII_Cg, %1@YSII_Ag, %1@YSII_Rg, %2)*/
 
 /*----------------------------------------------------------------------------*\
 Function:
@@ -910,15 +905,14 @@ stock Iter_RandomInternal(count, array[], size)
 Function:
 	Iter_FreeInternal
 Params:
-	count - Number of items in the iterator.
 	array[] - Iterator data.
 	size - Size of the iterator.
 Return:
 	-
 Notes:
-	Finds the first free slot in the iterator. Iterators now HAVE to be
+	Finds the first free slot in the iterator.  Iterators now HAVE to be
 	sorted for this function to work correctly as it uses that fact to decide
-	whether a slot is unused or the last one. If you want to use the slot
+	whether a slot is unused or the last one.  If you want to use the slot
 	straight after finding it the iterator will need to re-find it to add in
 	the data.
 \*----------------------------------------------------------------------------*/
@@ -939,10 +933,10 @@ stock Iter_FreeInternal(array[], size)
 Function:
 	Iter_AddInternal
 Params:
-	&start - Array start index.
 	&count - Number of items in the iterator.
 	array[] - Iterator data.
 	value - Item to add.
+	size - Size of the iterator.
 Return:
 	-
 Notes:
@@ -978,6 +972,7 @@ Params:
 	&count - Number of items in the iterator.
 	array[] - Iterator data.
 	value - Item to remove.
+	size - Size of the iterator.
 Return:
 	-
 Notes:
@@ -997,9 +992,9 @@ Function:
 Params:
 	&count - Number of items in the iterator.
 	array[] - Iterator data.
-	back[] - Reverse iterator data.
 	value - Item to remove.
 	&last - Pointer in which to store the last pointer.
+	size - Size of the iterator.
 Return:
 	-
 Notes:
@@ -1059,9 +1054,9 @@ Notes:
 
 stock Iter_ClearInternal(&count, array[], size)
 {
-	for (new i = 0; i != size; ++i)
+	for (new i = 0, t = size + 1; i < size; ++i)
 	{
-		array[i] = ITER_NONE;
+		array[i] = t;
 	}
 	array[size] = size;
 	count = 0;
@@ -1083,13 +1078,13 @@ Notes:
 
 stock Iter_InitInternal(arr[][], s0, s1)
 {
-	for (new i = 0; i != s0; ++i)
+	for (new i = 0, t = s1 + 1; i < s0; ++i)
 	{
 		for (new j = 0; j < s1; ++j)
 		{
-			arr[i][j] = ITER_NONE;
+			arr[i][j] = t;
 		}
-		arr[i][s1] = ITER_NONE;
+		arr[i][s1] = s1;
 	}
 }
 
@@ -1106,8 +1101,7 @@ Notes:
 	Gets the element in an iterator that points to the current element.
 \*----------------------------------------------------------------------------*/
 
-stock
-	Iter_PrevInternal(array[], size, slot)
+stock Iter_PrevInternal(array[], size, slot)
 {
 	if (0 <= slot <= size && array[slot] <= size)
 	{
