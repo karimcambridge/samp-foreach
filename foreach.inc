@@ -53,10 +53,15 @@ Legal:
 		SA:MP Team past, present and future - SA:MP.
 	
 Version:
-	19 (0.4.2)
-Changelog:
-	14/05/15:
-		Cleaned up the entire include.
+	19 (0.4.3)
+Changelog:S
+	26/06/17 (0.4.3):
+		foreach: clear each iterator under OnFilterScriptInit/OnGameModeInit.
+		Added a revised Iter_SafeRemoveInternal by ZiGGi.
+		Fix some grammar issue with spaces.
+	14/05/15 (0.4.2):
+		Code cleanup (renamed all Itter_ to Iter and removed excess).
+		Removed unnecessary information.
 	16/07/12:
 		Fixed a bug with "loadfs" blocking callbacks.
 		Slightly reduced the memory consumption of constant strings.
