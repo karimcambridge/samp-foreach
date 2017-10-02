@@ -616,8 +616,10 @@ Notes:
 	public OnFilterScriptInit()
 	{
 		Iter_Clear(Player);
-		Iter_Clear(Bot);
-		Iter_Clear(Character);
+		#if defined _FOREACH_BOT && !defined FOREACH_NO_BOTS
+			Iter_Clear(Bot);
+			Iter_Clear(Character);
+		#endif
 		if (funcidx(YSI_gsOnPlayerDisconnect) != -1)
 		{
 			YSI_g_sCallbacks |= 1;
@@ -715,8 +717,10 @@ Notes:
 	{
 		// Clear everything.
 		Iter_Clear(Player);
-		Iter_Clear(Bot);
-		Iter_Clear(Character);
+		#if defined _FOREACH_BOT && !defined FOREACH_NO_BOTS
+			Iter_Clear(Bot);
+			Iter_Clear(Character);
+		#endif
 		if (funcidx(YSI_gsOnPlayerDisconnect) != -1)
 		{
 			YSI_g_sCallbacks |= 1;
