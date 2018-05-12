@@ -177,6 +177,9 @@ Iterators:
 	Character - All players and bots.
 \*----------------------------------------------------------------------------*/
 
+#if defined _FOREACH_LOCAL_VERSION
+	#endinput
+#endif
 #define _FOREACH_LOCAL_VERSION		19
 
 // Foreach is testing us.
