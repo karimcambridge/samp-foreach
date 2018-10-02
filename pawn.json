@@ -1,0 +1,7 @@
+{
+	"user": "karimcambridge",
+	"repo": "SAMP-foreach",
+	"dependencies": [
+		"sampctl/samp-stdlib"
+	]
+}
