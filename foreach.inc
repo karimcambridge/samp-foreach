@@ -1161,7 +1161,7 @@ Notes:
 	Returns a random value from an iterator.
 \*----------------------------------------------------------------------------*/
 
-stock Iter_RandomInternal(count, array[], size)
+stock Iter_RandomInternal(count, const array[], size)
 {
 	if (count == 0)
 	{
@@ -1197,7 +1197,7 @@ Notes:
 	the data.
 \*----------------------------------------------------------------------------*/
 
-stock Iter_FreeInternal(array[], size)
+stock Iter_FreeInternal(const array[], size)
 {
 	for (new i = 0; i != size; ++i)
 	{
@@ -1334,7 +1334,7 @@ Notes:
 	Checks if this item is in the iterator.
 \*----------------------------------------------------------------------------*/
 
-stock Iter_ContainsInternal(array[], value, size)
+stock Iter_ContainsInternal(const array[], value, size)
 {
 	return 0 <= value < size && array[value] <= size;
 }
