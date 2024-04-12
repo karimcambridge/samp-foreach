@@ -56,7 +56,7 @@ Version:
 	19 (0.4.3)
 Changelog:
 	12/04/14 (0.4.4):
-		Added new Vehicle & Actor iterators.
+		Added new Vehicle & Actor iterators (from ZiGGi).
 	26/06/17 (0.4.3):
 		foreach: clear each iterator under OnFilterScriptInit/OnGameModeInit.
 		Added a revised Iter_SafeRemoveInternal by ZiGGi.
@@ -961,11 +961,7 @@ Notes:
 			ret = CreateVehicle(modelid, x, y, z, angle, color1, color2, respawn_delay, addsiren);
 
 		if (ret != INVALID_VEHICLE_ID && ret != 0) {
-			#if defined FOREACH_MULTISCRIPT
-				CallRemoteFunction("Iter_AddVehicle", "i", ret);
-			#else
-				Iter_Add(Vehicle, ret);
-			#endif
+			Iter_Add(Vehicle, ret);
 		}
 
 		return ret;
@@ -988,11 +984,7 @@ Notes:
 			ret = AddStaticVehicle(modelid, spawn_x, spawn_y, spawn_z, angle, color1, color2);
 
 		if (ret != INVALID_VEHICLE_ID) {
-			#if defined FOREACH_MULTISCRIPT
-				CallRemoteFunction("Iter_AddVehicle", "i", ret);
-			#else
-				Iter_Add(Vehicle, ret);
-			#endif
+			Iter_Add(Vehicle, ret);
 		}
 
 		return ret;
@@ -1019,11 +1011,7 @@ Notes:
 			ret = AddStaticVehicleEx(modelid, spawn_x, spawn_y, spawn_z, angle, color1, color2, respawn_delay, addsiren);
 
 		if (ret != INVALID_VEHICLE_ID) {
-			#if defined FOREACH_MULTISCRIPT
-				CallRemoteFunction("Iter_AddVehicle", "i", ret);
-			#else
-				Iter_Add(Vehicle, ret);
-			#endif
+			Iter_Add(Vehicle, ret);
 		}
 
 		return ret;
@@ -1043,11 +1031,7 @@ Notes:
 	stock DestroyVehicleSafe(&vehicleid)
 	{
 		new success = DestroyVehicle(vehicleid);
-		#if defined FOREACH_MULTISCRIPT
-			vehicleid = CallRemoteFunction("Iter_RemoveVehicle", "i", vehicleid);
-		#else
-			Iter_SafeRemove(Vehicle, vehicleid, vehicleid);
-		#endif
+		Iter_SafeRemove(Vehicle, vehicleid, vehicleid);
 		return success;
 	}
 
@@ -1057,11 +1041,7 @@ Notes:
 
 	stock Iter_DestroyVehicle(vehicleid)
 	{
-		#if defined FOREACH_MULTISCRIPT
-			CallRemoteFunction("Iter_RemoveVehicle", "i", vehicleid);
-		#else
-			Iter_Remove(Vehicle, vehicleid);
-		#endif
+		Iter_Remove(Vehicle, vehicleid);
 		return DestroyVehicle(vehicleid);
 	}
 	#if defined _ALS_DestroyVehicle
@@ -1091,11 +1071,7 @@ stock Iter_CreateActor(modelid, Float:X, Float:Y, Float:Z, Float:Rotation)
 	new
 		ret = CreateActor(modelid, X, Y, Z, Rotation);
 	if (ret != INVALID_ACTOR_ID) {
-		#if defined FOREACH_MULTISCRIPT
-			CallRemoteFunction("Iter_AddActor", "i", ret);
-		#else
-			Iter_Add(Actor, ret);
-		#endif
+		Iter_Add(Actor, ret);
 	}
 	return ret;
 }
@@ -1114,11 +1090,7 @@ stock Iter_CreateActor(modelid, Float:X, Float:Y, Float:Z, Float:Rotation)
 stock DestroyActorSafe(&actorid)
 {
 	new success = DestroyActor(actorid);
-	#if defined FOREACH_MULTISCRIPT
-		actorid = CallRemoteFunction("Iter_RemoveActor", "i", actorid);
-	#else
-		Iter_SafeRemove(Actor, actorid, actorid);
-	#endif
+	Iter_SafeRemove(Actor, actorid, actorid);
 	return success;
 }
 
@@ -1128,11 +1100,7 @@ stock DestroyActorSafe(&actorid)
 
 stock Iter_DestroyActor(actorid)
 {
-	#if defined FOREACH_MULTISCRIPT
-		CallRemoteFunction("Iter_RemoveActor", "i", actorid);
-	#else
-		Iter_Remove(Actor, actorid);
-	#endif
+	Iter_Remove(Actor, actorid);
 	return DestroyActor(actorid);
 }
 #if defined _ALS_DestroyActor
