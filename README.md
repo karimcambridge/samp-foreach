@@ -22,7 +22,7 @@ Then simply include into code:
 
 https://github.com/Open-GTO/foreach
 
-## How to use
+## How to use (credits to ZiGGi)
 #### Gives $100 to all connected players
 ```Pawn
 foreach (new playerid : Player) {
