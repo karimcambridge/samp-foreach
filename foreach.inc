@@ -53,7 +53,7 @@ Legal:
 		SA:MP Team past, present and future - SA:MP.
 
 Version:
-	19 (0.4.3)
+	19 (0.4.4)
 Changelog:
 	12/04/14 (0.4.4):
 		Added new Vehicle & Actor iterators.
