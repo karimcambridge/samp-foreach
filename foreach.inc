@@ -186,24 +186,9 @@ Iterators:
 
 // Foreach is testing us.
 #if defined _FOREACH_INC_TEST
-	#define _FOREACH_CUR_VERSION _FOREACH_LOCAL_VERSION
 	#endinput
 #endif
-#if !defined _FOREACH_NO_TEST
-	#define _FOREACH_INC_TEST
-	#tryinclude <YSI\y_iterate>
-	#undef _FOREACH_INC_TEST
-	// <foreach> exists - test which is newer.
-	#if defined _inc_y_iterate
-		#if _FOREACH_CUR_VERSION > _FOREACH_LOCAL_VERSION
-			// Foreach is newer.
-			#undef _inc_y_iterate
-			#define _FOREACH_NO_TEST
-			#include <YSI\y_iterate>
-			#endinput
-		#endif
-	#endif
-#endif
+#define _FOREACH_INC_TEST
 
 #if !defined _samp_included
 	#error "Please include a_samp or a_npc before foreach"
