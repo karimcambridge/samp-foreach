@@ -18,6 +18,6 @@ Then simply include into code:
 #include <foreach>
 ```
 
-## Foreach option with more iterators out of the box
+## foreach option with more iterators out of the box
 
 https://github.com/Open-GTO/foreach
