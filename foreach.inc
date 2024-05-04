@@ -218,7 +218,6 @@ Iterators:
 
 //#define _Y_ITER_C3:%0[%1]@YSII_Cg,%2[%3]@YSII_Ag[%4]={%5} _Y_ITER_C3:%0@YSII_Cg[%4-1],%0@YSII_Ag[%1][%4]
 
-
 #if !defined BOTSYNC_IS_BOT
 	static stock
 		YSI_g_sCallbacks = 0;
@@ -228,8 +227,10 @@ Iterators:
 	#if !defined FOREACH_I_Vehicle
 		#define FOREACH_I_Vehicle 1
 	#endif
-#elseif !defined FOREACH_I_Vehicle
-	#define FOREACH_I_Vehicle 0
+#else
+	#if !defined FOREACH_I_Vehicle
+		#define FOREACH_I_Vehicle 0
+	#endif
 #endif
 
 /*----------------------------------------------------------------------------*\
@@ -692,14 +693,6 @@ Notes:
 	public OnGameModeInit()
 	{
 		Iter_ScriptInit();
-		if(!Player@YSII_Cg) {
-			#if defined _FOREACH_BOT && !defined FOREACH_NO_BOTS
-				CallLocalFunction(YSI_gsOnGameModeInit, YSI_gsSpecifier@, Bot@YSII_Cg, Character@YSII_Cg, Player@YSII_Cg);
-			#else
-				CallLocalFunction(YSI_gsOnGameModeInit, YSI_gsSpecifier@, Player@YSII_Cg);
-			#endif
-			return 1;
-		}
 		// Do the forward iterator list.
 		#if defined _FOREACH_BOT && !defined FOREACH_NO_BOTS
 			Bot@YSII_Cg = _Y_ITER_C3:0;
