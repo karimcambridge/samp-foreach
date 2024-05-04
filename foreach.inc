@@ -222,14 +222,14 @@ Iterators:
 #if !defined BOTSYNC_IS_BOT
 	static stock
 		YSI_g_sCallbacks = 0;
-#endif
 
-#if !defined BOTSYNC_IS_BOT
 	forward Iter_OPDCInternal(playerid);
-#endif
 
-#if !defined FOREACH_I_Vehicle
-	#define FOREACH_I_Vehicle 1
+	#if !defined FOREACH_I_Vehicle
+		#define FOREACH_I_Vehicle 1
+	#endif
+#elseif !defined FOREACH_I_Vehicle
+	#define FOREACH_I_Vehicle 0
 #endif
 
 /*----------------------------------------------------------------------------*\
@@ -888,7 +888,6 @@ Notes:
 /* VEHICLES */
 
 #if FOREACH_I_Vehicle
-
 	/* Iter_CreateVehicle */
 
 	stock Iter_CreateVehicle(modelid, Float:x, Float:y, Float:z, Float:angle, color1, color2, respawn_delay, addsiren = 0)
@@ -901,6 +900,7 @@ Notes:
 		}
 		return ret;
 	}
+
 	#if defined _ALS_CreateVehicle
 		#undef CreateVehicle
 	#else
@@ -920,6 +920,7 @@ Notes:
 		}
 		return ret;
 	}
+
 	#if defined _ALS_AddStaticVehicle
 		#undef AddStaticVehicle
 	#else
@@ -939,6 +940,7 @@ Notes:
 		}
 		return ret;
 	}
+
 	#if defined _ALS_AddStaticVehicleEx
 		#undef AddStaticVehicleEx
 	#else
@@ -962,57 +964,61 @@ Notes:
 		Iter_Remove(Vehicle, vehicleid);
 		return DestroyVehicle(vehicleid);
 	}
+
 	#if defined _ALS_DestroyVehicle
 		#undef DestroyVehicle
 	#else
 		#define _ALS_DestroyVehicle
 	#endif
 	#define DestroyVehicle Iter_DestroyVehicle
-
 #endif
 
 /* ACTORS */
 
-/* Iter_CreateActor */
+#if !defined BOTSYNC_IS_BOT
+	/* Iter_CreateActor */
 
-stock Iter_CreateActor(modelid, Float:x, Float:y, Float:z, Float:zAngle)
-{
-	new
-		ret = CreateActor(modelid, x, y, z, zAngle);
-	if(ret != INVALID_ACTOR_ID) {
-		Iter_Add(Actor, ret);
+	stock Iter_CreateActor(modelid, Float:x, Float:y, Float:z, Float:zAngle)
+	{
+		new
+			ret = CreateActor(modelid, x, y, z, zAngle);
+		if(ret != INVALID_ACTOR_ID) {
+			Iter_Add(Actor, ret);
+		}
+		return ret;
 	}
-	return ret;
-}
-#if defined _ALS_CreateActor
-	#undef CreateActor
-#else
-	#define _ALS_CreateActor
+
+	#if defined _ALS_CreateActor
+		#undef CreateActor
+	#else
+		#define _ALS_CreateActor
+	#endif
+	#define CreateActor Iter_CreateActor
+
+	/* DestroyActorSafe */
+
+	stock DestroyActorSafe(&actorid)
+	{
+		new success = DestroyActor(actorid);
+		Iter_SafeRemove(Actor, actorid, actorid);
+		return success;
+	}
+
+	/* Iter_DestroyActor */
+
+	stock Iter_DestroyActor(actorid)
+	{
+		Iter_Remove(Actor, actorid);
+		return DestroyActor(actorid);
+	}
+
+	#if defined _ALS_DestroyActor
+		#undef DestroyActor
+	#else
+		#define _ALS_DestroyActor
+	#endif
+	#define DestroyActor Iter_DestroyActor
 #endif
-#define CreateActor Iter_CreateActor
-
-/* DestroyActorSafe */
-
-stock DestroyActorSafe(&actorid)
-{
-	new success = DestroyActor(actorid);
-	Iter_SafeRemove(Actor, actorid, actorid);
-	return success;
-}
-
-/* Iter_DestroyActor */
-
-stock Iter_DestroyActor(actorid)
-{
-	Iter_Remove(Actor, actorid);
-	return DestroyActor(actorid);
-}
-#if defined _ALS_DestroyActor
-	#undef DestroyActor
-#else
-	#define _ALS_DestroyActor
-#endif
-#define DestroyActor Iter_DestroyActor
 
 /*----------------------------------------------------------------------------*\
 Function:
