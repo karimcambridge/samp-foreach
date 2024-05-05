@@ -218,18 +218,19 @@ Iterators:
 
 //#define _Y_ITER_C3:%0[%1]@YSII_Cg,%2[%3]@YSII_Ag[%4]={%5} _Y_ITER_C3:%0@YSII_Cg[%4-1],%0@YSII_Ag[%1][%4]
 
-
 #if !defined BOTSYNC_IS_BOT
 	static stock
 		YSI_g_sCallbacks = 0;
-#endif
 
-#if !defined BOTSYNC_IS_BOT
 	forward Iter_OPDCInternal(playerid);
-#endif
 
-#if !defined FOREACH_I_Vehicle
-	#define FOREACH_I_Vehicle 1
+	#if !defined FOREACH_I_Vehicle
+		#define FOREACH_I_Vehicle 1
+	#endif
+#else
+	#if !defined FOREACH_I_Vehicle
+		#define FOREACH_I_Vehicle 0
+	#endif
 #endif
 
 /*----------------------------------------------------------------------------*\
@@ -547,9 +548,7 @@ Notes:
 #define foreachex(%1,%2) foreach(%2:%1)
 	//for(%2=_Y_ITER_ARRAY_SIZE(%1);(%2=_Y_ITER_ARRAY:%1@YSII_Ag[%2])!=_Y_ITER_ARRAY_SIZE(%1);)
 
-
-/*
---------------------------------------------------------------------------------
+/*----------------------------------------------------------------------------*\
 Function:
 	Iter_ScriptInit
 Params:
@@ -558,23 +557,11 @@ Return:
 	-
 Notes:
 	-
---------------------------------------------------------------------------------
-*/
+\*----------------------------------------------------------------------------*/
 
 stock Iter_ScriptInit()
 {
-	#if defined GetPlayerPoolSize && !defined _INC_open_mp && !defined _inc_fixes
-		new
-			LAST_PLAYER_ID = GetPlayerPoolSize() + 1,
-			LAST_VEHICLE_ID = GetVehiclePoolSize() + 1,
-			LAST_ACTOR_ID = GetActorPoolSize() + 1;
-	#else
-		new
-			LAST_PLAYER_ID = MAX_PLAYERS,
-			LAST_VEHICLE_ID = MAX_VEHICLES,
-			LAST_ACTOR_ID = MAX_ACTORS;
-	#endif
-
+	// Clear everything.
 	Iter_Clear(Player);
 	#if defined _FOREACH_BOT && !defined FOREACH_NO_BOTS
 		Iter_Clear(Bot);
@@ -583,8 +570,7 @@ stock Iter_ScriptInit()
 
 	#if FOREACH_I_Vehicle
 		Iter_Clear(Vehicle);
-
-		for(new vehicleid = 1; vehicleid != LAST_VEHICLE_ID; ++vehicleid) {
+		for(new vehicleid = 1; vehicleid != MAX_VEHICLES; ++vehicleid) {
 			if(!GetVehicleModel(vehicleid)) {
 				continue;
 			}
@@ -593,7 +579,7 @@ stock Iter_ScriptInit()
 	#endif
 
 	Iter_Clear(Actor);
-	for(new actorid = 0; actorid != LAST_ACTOR_ID; ++actorid) {
+	for(new actorid = 0; actorid != MAX_ACTORS; ++actorid) {
 		if(!IsValidActor(actorid)) {
 			continue;
 		}
@@ -606,8 +592,6 @@ stock Iter_ScriptInit()
 	if(funcidx(YSI_gsOnPlayerConnect) != -1) {
 		YSI_g_sCallbacks |= 2;
 	}
-
-	#pragma unused LAST_PLAYER_ID, LAST_VEHICLE_ID, LAST_ACTOR_ID
 }
 
 /*----------------------------------------------------------------------------*\
@@ -626,6 +610,7 @@ Notes:
 	public OnFilterScriptInit()
 	{
 		Iter_ScriptInit();
+		// Do the forward iterator list.
 		#if defined _FOREACH_BOT && !defined FOREACH_NO_BOTS
 			Bot@YSII_Cg = _Y_ITER_C3:0;
 			Character@YSII_Cg = _Y_ITER_C3:0;
@@ -640,15 +625,13 @@ Notes:
 			if(IsPlayerConnected(i)) {
 				#if defined _FOREACH_BOT
 					// Had to do "if ! else" due to compile options.
-					if(!IsPlayerNPC(i))
-					{
+					if(!IsPlayerNPC(i)) {
 						Player@YSII_Ag[lastPlayer] = i;
 						++Player@YSII_Cg;
 						lastPlayer = i;
 					}
 					#if !defined FOREACH_NO_BOTS
-						else
-						{
+						else {
 							Bot@YSII_Ag[lastBot] = i;
 							++Bot@YSII_Cg;
 							lastBot = i;
@@ -709,16 +692,7 @@ Notes:
 #if !defined BOTSYNC_IS_BOT
 	public OnGameModeInit()
 	{
-		// Clear everything.
 		Iter_ScriptInit();
-		if(!Player@YSII_Cg) {
-			#if defined _FOREACH_BOT && !defined FOREACH_NO_BOTS
-				CallLocalFunction(YSI_gsOnGameModeInit, YSI_gsSpecifier@, Bot@YSII_Cg, Character@YSII_Cg, Player@YSII_Cg);
-			#else
-				CallLocalFunction(YSI_gsOnGameModeInit, YSI_gsSpecifier@, Player@YSII_Cg);
-			#endif
-			return 1;
-		}
 		// Do the forward iterator list.
 		#if defined _FOREACH_BOT && !defined FOREACH_NO_BOTS
 			Bot@YSII_Cg = _Y_ITER_C3:0;
@@ -737,15 +711,13 @@ Notes:
 			if(IsPlayerConnected(i)) {
 				#if defined _FOREACH_BOT
 					// Had to do "if ! else" due to compile options.
-					if(!IsPlayerNPC(i))
-					{
+					if(!IsPlayerNPC(i)) {
 						Player@YSII_Ag[lastPlayer] = i;
 						++Player@YSII_Cg;
 						lastPlayer = i;
 					}
 					#if !defined FOREACH_NO_BOTS
-						else
-						{
+						else {
 							Bot@YSII_Ag[lastBot] = i;
 							++Bot@YSII_Cg;
 							lastBot = i;
@@ -824,8 +796,7 @@ Notes:
 		#else
 			Iter_Add(Player, playerid);
 		#endif
-		if(YSI_g_sCallbacks & 2)
-		{
+		if(YSI_g_sCallbacks & 2) {
 			CallLocalFunction(YSI_gsOnPlayerConnect, YSI_gsSpecifier@i, playerid);
 		}
 		return 1;
@@ -907,41 +878,30 @@ Notes:
 	}
 #endif
 
-/*
-	VEHICLES
-*/
+/* VEHICLES */
 
 #if FOREACH_I_Vehicle
+	/* Iter_CreateVehicle */
 
-	/*
-		Iter_CreateVehicle
-	*/
-
-#if defined _INC_open_mp
-	stock Iter_CreateVehicle(modelid, Float:x, Float:y, Float:z, Float:angle, color1, color2, respawn_delay, bool:addsiren = false)
-#else
 	stock Iter_CreateVehicle(modelid, Float:x, Float:y, Float:z, Float:angle, color1, color2, respawn_delay, addsiren = 0)
-#endif
 	{
 		new
-			ret = CreateVehicle(modelid, x, y, z, angle, color1, color2, respawn_delay, addsiren);
+			ret = CreateVehicle(modelid, x, y, z, angle, color1, color2, respawn_delay, !!addsiren);
 
 		if(ret != INVALID_VEHICLE_ID && ret != 0) {
 			Iter_Add(Vehicle, ret);
 		}
 		return ret;
 	}
+
 	#if defined _ALS_CreateVehicle
 		#undef CreateVehicle
 	#else
 		#define _ALS_CreateVehicle
 	#endif
-
 	#define CreateVehicle Iter_CreateVehicle
 
-	/*
-		Iter_AddStaticVehicle
-	*/
+	/* Iter_AddStaticVehicle */
 
 	stock Iter_AddStaticVehicle(modelid, Float:x, Float:y, Float:z, Float:angle, color1, color2)
 	{
@@ -953,43 +913,35 @@ Notes:
 		}
 		return ret;
 	}
+
 	#if defined _ALS_AddStaticVehicle
 		#undef AddStaticVehicle
 	#else
 		#define _ALS_AddStaticVehicle
 	#endif
-
 	#define AddStaticVehicle Iter_AddStaticVehicle
 
-	/*
-		Iter_AddStaticVehicleEx
-	*/
+	/* Iter_AddStaticVehicleEx */
 
-#if defined _INC_open_mp
-	stock Iter_AddStaticVehicleEx(modelid, Float:x, Float:y, Float:z, Float:angle, color1, color2, respawn_delay, bool:addsiren = false)
-#else
 	stock Iter_AddStaticVehicleEx(modelid, Float:x, Float:y, Float:z, Float:angle, color1, color2, respawn_delay, addsiren = 0)
-#endif
 	{
 		new
-			ret = AddStaticVehicleEx(modelid, x, y, z, angle, color1, color2, respawn_delay, addsiren);
+			ret = AddStaticVehicleEx(modelid, x, y, z, angle, color1, color2, respawn_delay, !!addsiren);
 
 		if(ret != INVALID_VEHICLE_ID) {
 			Iter_Add(Vehicle, ret);
 		}
 		return ret;
 	}
+
 	#if defined _ALS_AddStaticVehicleEx
 		#undef AddStaticVehicleEx
 	#else
 		#define _ALS_AddStaticVehicleEx
 	#endif
-
 	#define AddStaticVehicleEx Iter_AddStaticVehicleEx
 
-	/*
-		DestroyVehicleSafe
-	*/
+	/* DestroyVehicleSafe */
 
 	stock DestroyVehicleSafe(&vehicleid)
 	{
@@ -998,77 +950,68 @@ Notes:
 		return success;
 	}
 
-	/*
-		Iter_DestroyVehicle
-	*/
+	/* Iter_DestroyVehicle */
 
 	stock Iter_DestroyVehicle(vehicleid)
 	{
 		Iter_Remove(Vehicle, vehicleid);
 		return DestroyVehicle(vehicleid);
 	}
+
 	#if defined _ALS_DestroyVehicle
 		#undef DestroyVehicle
 	#else
 		#define _ALS_DestroyVehicle
 	#endif
-
 	#define DestroyVehicle Iter_DestroyVehicle
-
 #endif
 
-/*
-	ACTORS
-*/
+/* ACTORS */
 
-/*
-	Iter_CreateActor
-*/
+#if !defined BOTSYNC_IS_BOT
+	/* Iter_CreateActor */
 
-stock Iter_CreateActor(modelid, Float:x, Float:y, Float:z, Float:zAngle)
-{
-	new
-		ret = CreateActor(modelid, x, y, z, zAngle);
-	if(ret != INVALID_ACTOR_ID) {
-		Iter_Add(Actor, ret);
+	stock Iter_CreateActor(modelid, Float:x, Float:y, Float:z, Float:zAngle)
+	{
+		new
+			ret = CreateActor(modelid, x, y, z, zAngle);
+		if(ret != INVALID_ACTOR_ID) {
+			Iter_Add(Actor, ret);
+		}
+		return ret;
 	}
-	return ret;
-}
-#if defined _ALS_CreateActor
-	#undef CreateActor
-#else
-	#define _ALS_CreateActor
+
+	#if defined _ALS_CreateActor
+		#undef CreateActor
+	#else
+		#define _ALS_CreateActor
+	#endif
+	#define CreateActor Iter_CreateActor
+
+	/* DestroyActorSafe */
+
+	stock DestroyActorSafe(&actorid)
+	{
+		new success = DestroyActor(actorid);
+		Iter_SafeRemove(Actor, actorid, actorid);
+		return success;
+	}
+
+	/* Iter_DestroyActor */
+
+	stock Iter_DestroyActor(actorid)
+	{
+		Iter_Remove(Actor, actorid);
+		return DestroyActor(actorid);
+	}
+
+	#if defined _ALS_DestroyActor
+		#undef DestroyActor
+	#else
+		#define _ALS_DestroyActor
+	#endif
+	#define DestroyActor Iter_DestroyActor
 #endif
-
-#define CreateActor Iter_CreateActor
-
-/*
-	DestroyActorSafe
-*/
-
-stock DestroyActorSafe(&actorid)
-{
-	new success = DestroyActor(actorid);
-	Iter_SafeRemove(Actor, actorid, actorid);
-	return success;
-}
-
-/*
-	Iter_DestroyActor
-*/
-
-stock Iter_DestroyActor(actorid)
-{
-	Iter_Remove(Actor, actorid);
-	return DestroyActor(actorid);
-}
-#if defined _ALS_DestroyActor
-	#undef DestroyActor
-#else
-	#define _ALS_DestroyActor
-#endif
-
-#define DestroyActor Iter_DestroyActor
 
 /*----------------------------------------------------------------------------*\
 Function:
@@ -1091,7 +1034,7 @@ stock Iter_RandomInternal(count, const array[], size)
 	new
 		rnd = random(count),
 		cur = array[size];
-	while (cur != size) {
+	while(cur != size) {
 		if(rnd-- == 0) {
 			return cur;
 		}
@@ -1148,7 +1091,7 @@ stock Iter_AddInternal(&count, array[], value, size)
 		new
 			last = size,
 			next = array[last];
-		while (next < value) {
+		while(next < value) {
 			last = next;
 			next = array[last];
 		}
@@ -1198,13 +1141,11 @@ Notes:
 
 /*stock Iter_SafeRemoveInternal(&count, array[], value, &last, size)
 {
-	if(0 <= value < size && array[value] <= size)
-	{
+	if(0 <= value < size && array[value] <= size) {
 		last = size;
 		new
 			next = array[last];
-		while (next != value)
-		{
+		while(next != value) {
 			last = next;
 			next = array[last];
 		}
@@ -1222,7 +1163,7 @@ stock Iter_SafeRemoveInternal(&count, array[], value, &last, size)
 		last = size;
 		new
 			next = array[last];
-		while (next < size) {
+		while(next < size) {
 			if(next == value) {
 				array[last] = array[value];
 				array[value] = size + 1;
@@ -1317,10 +1258,10 @@ stock Iter_PrevInternal(array[], size, slot)
 {
 	if(0 <= slot <= size && array[slot] <= size) {
 		for(new last = slot; last--; ) {
- 			if(array[last] == slot) {
- 				return last;
- 			}
- 		}
+			if(array[last] == slot) {
+				return last;
+			}
+		}
 	}
 	return size;
 }
@@ -1408,26 +1349,26 @@ Notes:
 
 /*----------------------------------------------------------------------------*\
 Function:
-    Iter_InternalArray
+	Iter_InternalArray
 Params:
-    iter - Name of the iterator to get the true name of.
+	iter - Name of the iterator to get the true name of.
 Return:
-    -
+	-
 Notes:
-    Accesses the internal array of an iterator.
+	Accesses the internal array of an iterator.
 \*----------------------------------------------------------------------------*/
 
 #define Iter_InternalArray(%1) (_Y_ITER_ARRAY:%1@YSII_Ag)
 
 /*----------------------------------------------------------------------------*\
 Function:
-    Iter_InternalSize
+	Iter_InternalSize
 Params:
-    iter - Name of the iterator to get the true size of.
+	iter - Name of the iterator to get the true size of.
 Return:
-    -
+	-
 Notes:
-    Accesses the internal size of an iterator.
+	Accesses the internal size of an iterator.
 \*----------------------------------------------------------------------------*/
 
 #define _Y_ITER_INT_SIZE:%0(%2[%1]@YSII_Ag)) %0(%2@YSII_Ag[]))
