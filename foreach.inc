@@ -559,6 +559,10 @@ Notes:
 	-
 \*----------------------------------------------------------------------------*/
 
+#if !defined IsValidVehicle
+native IsValidVehicle(vehicleid);
+#endif
+
 stock Iter_ScriptInit()
 {
 	// Clear everything.
@@ -571,7 +575,7 @@ stock Iter_ScriptInit()
 	#if FOREACH_I_Vehicle
 		Iter_Clear(Vehicle);
 		for(new vehicleid = 1; vehicleid != MAX_VEHICLES; ++vehicleid) {
-			if(!GetVehicleModel(vehicleid)) {
+			if(!IsValidVehicle(vehicleid)) {
 				continue;
 			}
 			Iter_Add(Vehicle, vehicleid);
