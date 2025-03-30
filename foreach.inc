@@ -227,9 +227,17 @@ Iterators:
 	#if !defined FOREACH_I_Vehicle
 		#define FOREACH_I_Vehicle 1
 	#endif
+
+	#if !defined FOREACH_I_Actor
+		#define FOREACH_I_Actor 1
+	#endif
 #else
 	#if !defined FOREACH_I_Vehicle
 		#define FOREACH_I_Vehicle 0
+	#endif
+
+	#if !defined FOREACH_I_Actor
+		#define FOREACH_I_Actor 0
 	#endif
 #endif
 
@@ -449,12 +457,14 @@ Create the internal iterators.
 \*----------------------------------------------------------------------------*/
 
 #if !defined BOTSYNC_IS_BOT
-	new
-		Iterator:Player<MAX_PLAYERS>,
-		Iterator:Actor<MAX_ACTORS>;
+	new Iterator:Player<MAX_PLAYERS>;
 
 	#if FOREACH_I_Vehicle
 		new Iterator:Vehicle<MAX_VEHICLES>;
+	#endif
+
+	#if FOREACH_I_Actor
+		new Iterator:Actor<MAX_ACTORS>;
 	#endif
 
 	#if defined _FOREACH_BOT && !defined FOREACH_NO_BOTS
@@ -567,7 +577,6 @@ stock Iter_ScriptInit()
 		Iter_Clear(Bot);
 		Iter_Clear(Character);
 	#endif
-
 	#if FOREACH_I_Vehicle
 		Iter_Clear(Vehicle);
 		for(new vehicleid = 1; vehicleid != MAX_VEHICLES; ++vehicleid) {
@@ -577,15 +586,15 @@ stock Iter_ScriptInit()
 			Iter_Add(Vehicle, vehicleid);
 		}
 	#endif
-
-	Iter_Clear(Actor);
-	for(new actorid = 0; actorid != MAX_ACTORS; ++actorid) {
-		if(!IsValidActor(actorid)) {
-			continue;
+	#if FOREACH_I_Actor
+		Iter_Clear(Actor);
+		for(new actorid = 0; actorid != MAX_ACTORS; ++actorid) {
+			if(!IsValidActor(actorid)) {
+				continue;
+			}
+			Iter_Add(Actor, actorid);
 		}
-		Iter_Add(Actor, actorid);
-	}
-
+	#endif
 	if(funcidx(YSI_gsOnPlayerDisconnect) != -1) {
 		YSI_g_sCallbacks |= 1;
 	}
@@ -885,9 +894,14 @@ Notes:
 
 	stock Iter_CreateVehicle(modelid, Float:x, Float:y, Float:z, Float:angle, color1, color2, respawn_delay, addsiren = 0)
 	{
-		new
-			ret = CreateVehicle(modelid, x, y, z, angle, color1, color2, respawn_delay, !!addsiren);
-
+		#if defined GetActorPos
+			new
+				ret = CreateVehicle(modelid, x, y, z, angle, color1, color2, respawn_delay, !!addsiren);
+		#else
+			#pragma unused addsiren
+			new
+				ret = CreateVehicle(modelid, x, y, z, angle, color1, color2, respawn_delay);
+		#endif
 		if(ret != INVALID_VEHICLE_ID && ret != 0) {
 			Iter_Add(Vehicle, ret);
 		}
@@ -907,7 +921,6 @@ Notes:
 	{
 		new
 			ret = AddStaticVehicle(modelid, x, y, z, angle, color1, color2);
-
 		if(ret != INVALID_VEHICLE_ID) {
 			Iter_Add(Vehicle, ret);
 		}
@@ -925,9 +938,14 @@ Notes:
 
 	stock Iter_AddStaticVehicleEx(modelid, Float:x, Float:y, Float:z, Float:angle, color1, color2, respawn_delay, addsiren = 0)
 	{
-		new
-			ret = AddStaticVehicleEx(modelid, x, y, z, angle, color1, color2, respawn_delay, !!addsiren);
-
+		#if defined GetActorPos
+			new
+				ret = AddStaticVehicleEx(modelid, x, y, z, angle, color1, color2, respawn_delay, !!addsiren);
+		#else
+			#pragma unused addsiren
+			new
+				ret = AddStaticVehicleEx(modelid, x, y, z, angle, color1, color2, respawn_delay);
+		#endif
 		if(ret != INVALID_VEHICLE_ID) {
 			Iter_Add(Vehicle, ret);
 		}
@@ -945,9 +963,10 @@ Notes:
 
 	stock DestroyVehicleSafe(&vehicleid)
 	{
-		new success = DestroyVehicle(vehicleid);
+		new
+			ret = DestroyVehicle(vehicleid);
 		Iter_SafeRemove(Vehicle, vehicleid, vehicleid);
-		return success;
+		return ret;
 	}
 
 	/* Iter_DestroyVehicle */
@@ -968,7 +987,7 @@ Notes:
 
 /* ACTORS */
 
-#if !defined BOTSYNC_IS_BOT
+#if FOREACH_I_Actor
 	/* Iter_CreateActor */
 
 	stock Iter_CreateActor(modelid, Float:x, Float:y, Float:z, Float:zAngle)
@@ -992,9 +1011,10 @@ Notes:
 
 	stock DestroyActorSafe(&actorid)
 	{
-		new success = DestroyActor(actorid);
+		new
+			ret = DestroyActor(actorid);
 		Iter_SafeRemove(Actor, actorid, actorid);
-		return success;
+		return ret;
 	}
 
 	/* Iter_DestroyActor */
