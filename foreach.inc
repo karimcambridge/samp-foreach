@@ -224,20 +224,20 @@ Iterators:
 
 	forward Iter_OPDCInternal(playerid);
 
-	#if !defined FOREACH_I_Vehicle
-		#define FOREACH_I_Vehicle 1
+	#if !defined _FOREACH_VEHICLES
+		#define _FOREACH_VEHICLES 1
 	#endif
 
-	#if !defined FOREACH_I_Actor
-		#define FOREACH_I_Actor 1
+	#if !defined _FOREACH_ACTORS
+		#define _FOREACH_ACTORS 1
 	#endif
 #else
-	#if !defined FOREACH_I_Vehicle
-		#define FOREACH_I_Vehicle 0
+	#if !defined _FOREACH_VEHICLES
+		#define _FOREACH_VEHICLES 0
 	#endif
 
-	#if !defined FOREACH_I_Actor
-		#define FOREACH_I_Actor 0
+	#if !defined _FOREACH_ACTORS
+		#define _FOREACH_ACTORS 0
 	#endif
 #endif
 
@@ -459,11 +459,11 @@ Create the internal iterators.
 #if !defined BOTSYNC_IS_BOT
 	new Iterator:Player<MAX_PLAYERS>;
 
-	#if FOREACH_I_Vehicle
+	#if _FOREACH_VEHICLES
 		new Iterator:Vehicle<MAX_VEHICLES>;
 	#endif
 
-	#if FOREACH_I_Actor
+	#if _FOREACH_ACTORS
 		new Iterator:Actor<MAX_ACTORS>;
 	#endif
 
@@ -577,7 +577,7 @@ stock Iter_ScriptInit()
 		Iter_Clear(Bot);
 		Iter_Clear(Character);
 	#endif
-	#if FOREACH_I_Vehicle
+	#if _FOREACH_VEHICLES
 		Iter_Clear(Vehicle);
 		for(new vehicleid = 1; vehicleid != MAX_VEHICLES; ++vehicleid) {
 			if(!GetVehicleModel(vehicleid)) {
@@ -586,7 +586,7 @@ stock Iter_ScriptInit()
 			Iter_Add(Vehicle, vehicleid);
 		}
 	#endif
-	#if FOREACH_I_Actor
+	#if _FOREACH_ACTORS
 		Iter_Clear(Actor);
 		for(new actorid = 0; actorid != MAX_ACTORS; ++actorid) {
 			if(!IsValidActor(actorid)) {
@@ -889,7 +889,7 @@ Notes:
 
 /* VEHICLES */
 
-#if FOREACH_I_Vehicle
+#if _FOREACH_VEHICLES
 	/* Iter_CreateVehicle */
 
 	stock Iter_CreateVehicle(modelid, Float:x, Float:y, Float:z, Float:angle, color1, color2, respawn_delay, addsiren = 0)
@@ -987,7 +987,7 @@ Notes:
 
 /* ACTORS */
 
-#if FOREACH_I_Actor
+#if _FOREACH_ACTORS
 	/* Iter_CreateActor */
 
 	stock Iter_CreateActor(modelid, Float:x, Float:y, Float:z, Float:zAngle)
