@@ -894,14 +894,8 @@ Notes:
 
 	stock Iter_CreateVehicle(modelid, Float:x, Float:y, Float:z, Float:angle, color1, color2, respawn_delay, addsiren = 0)
 	{
-		#if defined GetActorPos
-			new
-				ret = CreateVehicle(modelid, x, y, z, angle, color1, color2, respawn_delay, !!addsiren);
-		#else
-			#pragma unused addsiren
-			new
-				ret = CreateVehicle(modelid, x, y, z, angle, color1, color2, respawn_delay);
-		#endif
+		new
+			ret = CreateVehicle(modelid, x, y, z, angle, color1, color2, respawn_delay, !!addsiren);
 		if(ret != INVALID_VEHICLE_ID && ret != 0) {
 			Iter_Add(Vehicle, ret);
 		}
@@ -938,14 +932,8 @@ Notes:
 
 	stock Iter_AddStaticVehicleEx(modelid, Float:x, Float:y, Float:z, Float:angle, color1, color2, respawn_delay, addsiren = 0)
 	{
-		#if defined GetActorPos
-			new
-				ret = AddStaticVehicleEx(modelid, x, y, z, angle, color1, color2, respawn_delay, !!addsiren);
-		#else
-			#pragma unused addsiren
-			new
-				ret = AddStaticVehicleEx(modelid, x, y, z, angle, color1, color2, respawn_delay);
-		#endif
+		new
+			ret = AddStaticVehicleEx(modelid, x, y, z, angle, color1, color2, respawn_delay, !!addsiren);
 		if(ret != INVALID_VEHICLE_ID) {
 			Iter_Add(Vehicle, ret);
 		}
