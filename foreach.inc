@@ -870,19 +870,10 @@ Notes:
 		if(IsPlayerConnected(playerid)) {
 			return;
 		}
-		#if defined _FOREACH_BOT
-			if(!IsPlayerNPC(playerid)) {
-				Iter_Remove(Player, playerid);
-			}
-			#if !defined FOREACH_NO_BOTS
-				else {
-					Iter_Remove(Bot, playerid);
-				}
-				#pragma tabsize 4
-				Iter_Remove(Character, playerid);
-			#endif
-		#else
-			Iter_Remove(Player, playerid);
+		Iter_Remove(Player, playerid);
+		#if defined _FOREACH_BOT && !defined FOREACH_NO_BOTS
+			Iter_Remove(Bot, playerid);
+			Iter_Remove(Character, playerid);
 		#endif
 	}
 #endif
